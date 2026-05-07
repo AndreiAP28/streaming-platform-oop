@@ -5,6 +5,7 @@
 
 #include "utils.h"
 #include "song.h"
+// #include "date.h"
 
 using namespace std;
 
@@ -12,25 +13,19 @@ using namespace std;
 
 int Song::counter = 3000;
 //!-------------------------CONSTRUCTORS--------------------------------
-Song::Song(): SONG_ID(counter++) {
+Song::Song():
+ SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr) ,streams(0), releaseDate() {
     // cout<<"CONSTRUCTORUL SONG DEFAULT CREAT"<<endl;
+    // se apeleaza by default constructorul default pt date nu trebuia adaugat si aici
 
     this->title = new char[4];
     strcpy(this->title, "N/A");
 
-    this->durationSec = 0;
-    this->artistID = 0;
-    
-    this->featuresSize = 0;
-    this->artistsFeatures = nullptr;
-    
-    this->streams = 0;
-
     
 }
 
-Song::Song(const char* title, int durationSec, int artistID, int featuresSize,const char** artistsFeatures, long long streams) 
-: SONG_ID(counter++), durationSec(durationSec), artistID(artistID), featuresSize(featuresSize), streams(streams) {
+Song::Song(const char* title, int durationSec, int artistID, int featuresSize,const char** artistsFeatures, long long streams, const Date& dateParam) 
+: SONG_ID(counter++), durationSec(durationSec), artistID(artistID), featuresSize(featuresSize), streams(streams), releaseDate(dateParam) {
     // cout << "CONSTRUCTORUL SONG CU TOTI PARAM CREAT" << endl;
     
     this->title = new char[strlen(title) + 1];
@@ -52,7 +47,7 @@ Song::Song(const char* title, int durationSec, int artistID, int featuresSize,co
 }
 
 Song::Song(const char* title)
-:SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr), streams(0) {
+:SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr), streams(0), releaseDate() {
     // cout << "CONSTRUCTOR SONG CU TITLU CREAT" << endl;
 
     this->title = new char[strlen(title) + 1];
@@ -60,7 +55,7 @@ Song::Song(const char* title)
 }
 
 Song::Song(const Song& other_song)
-: SONG_ID(other_song.SONG_ID), durationSec(other_song.durationSec), artistID(other_song.artistID), streams(other_song.streams) {
+: SONG_ID(other_song.SONG_ID), durationSec(other_song.durationSec), artistID(other_song.artistID), streams(other_song.streams), releaseDate(other_song.releaseDate) {
     // cout << "CONSTRUCTOR SONG DE COPIERE " << endl;
 
     this->title = new char[strlen(other_song.title) + 1];
@@ -118,6 +113,7 @@ Song& Song::operator=(const Song& other_song) {
     durationSec = other_song.durationSec;
     artistID = other_song.artistID;
     streams = other_song.streams;
+    releaseDate = other_song.releaseDate;
 
     return *this;
 }
@@ -342,3 +338,8 @@ Song::~Song() {
 
 }
 
+
+// int main() {
+//     Song s1;
+//     return 0;
+// }

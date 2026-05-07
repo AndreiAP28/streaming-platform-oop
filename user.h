@@ -6,6 +6,8 @@
 class Song;
 
 class User {
+protected:
+// displayProfile function for polimorphism
     static int counter;
     const int USER_ID;
     char* username;
@@ -18,6 +20,10 @@ public:
     User();
     User(const char* username, const char* password, Song** liked_songs, int likedSongs_num);
     User(const char* username, const char* password);
+
+    //used for inheritance 
+    User(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num);
+
     User(const User& other_user);
 
     //!--------------------------- OVERWRITTING OPERATORS--------------------
@@ -44,7 +50,9 @@ public:
     void setUsername(const char* new_username);
     void setPassword(const char* new_password);
     void add_likedSong(Song& new_song);
+    //!--------------------------------------------------------------------
+    virtual void displayProfile() const;
     //!--------------------------------DESTRUCTORS--------------------------
-    ~User();
+    virtual ~User();
 
 };

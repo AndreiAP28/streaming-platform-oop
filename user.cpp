@@ -2,7 +2,7 @@
 #include <cctype>
 #include <cstring>
 
-// #include "classes.h"
+// #include "classes.h" 
 
 #include "utils.h"
 #include "user.h"
@@ -15,6 +15,7 @@ int User::counter = 9000;
 User::User()
 :USER_ID(counter++),username(nullptr), password(nullptr), liked_songs(nullptr), likedSongs_num(0) {
     // cout << "CONSTRUCTOR USER FARA PARAMETRII" << endl;
+    cout << "User()" << endl;
 }
 
 User::User(const char* username, const char* password, Song** liked_songs, int likedSongs_num)
@@ -61,6 +62,25 @@ User::User(const char* username, const char* password)
     } else {
         this->password = nullptr;
     }
+}
+
+User::User(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num)
+:USER_ID(old_id), liked_songs(liked_songs), likedSongs_num(likedSongs_num) {
+    if (username != nullptr) {
+        this->username = new char[strlen(username) + 1];
+        strcpy(this->username, username);
+    } else {
+        this->username = nullptr;
+    }
+
+    if (password != nullptr) {
+        this->password = new char[strlen(password) + 1];
+        strcpy(this->password, password);
+    } else {
+        this->password = nullptr;
+    }
+
+    cout << "User()" << endl;
 }
 
 User::User(const User& other_user):
@@ -314,6 +334,25 @@ void User::add_likedSong(Song& new_song) {
 
     // cout << "AM ADAUGAT PIESA: " << new_song.getTitle() << endl;
 }
+//!------------------------------------- ---------------------------------
+void User::displayProfile() const {
+    cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|                  USER PROFILE                  |\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|  ID: [" << USER_ID << "]  USERNAME: " << (username != nullptr ? username : "N/A") << "\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|  LIKED SONGS TOTAL: " << likedSongs_num << "\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    if (likedSongs_num == 0 || liked_songs == nullptr) {
+        cout << "|  [!] This user hasn't liked any songs yet...   |\n";
+    } else {
+        cout << "|  LIKED SONGS:                                  |\n";
+        for (int i = 0; i < likedSongs_num; i++) {
+            cout << "|    [" << (i + 1) << "]. " << liked_songs[i]->getTitle() << "\n";
+        }
+    }
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+}
 //!------------------------- DESTRUCTOR ---------------------------------
 
 User::~User() {
@@ -332,4 +371,5 @@ User::~User() {
         this->liked_songs = nullptr;
     }
 
+    cout << "~User()" << endl;
 }

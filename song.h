@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include "date.h"
 
 class Song { 
     static int counter;
@@ -11,12 +12,13 @@ class Song {
     int featuresSize;
     char** artistsFeatures;
     long long streams;
+    Date releaseDate;
 
 public:
 
     //!     CONSTRUCTORS
     Song();
-    Song(const char* title, int durationSec, int artistID,int featuresSize, const char** artistFeatures, long long streams);
+    Song(const char* title, int durationSec, int artistID,int featuresSize, const char** artistFeatures, long long streams, const Date& dateParam);
     Song(const char* title);
     Song(const Song& other_song);
 

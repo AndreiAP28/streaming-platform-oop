@@ -11,6 +11,8 @@
 #include "song.h"
 #include "playlist.h" 
 #include "user.h"
+#include "premium_user.h"
+#include "family_premium_user.h"
 
 using namespace std;
 
@@ -847,8 +849,8 @@ StreamingPlatformApp::~StreamingPlatformApp() {
 }
 
 
-int main() {    
-    StreamingPlatformApp SpotifyApp;
-    SpotifyApp.run();
-    return 0;
-}
+// int main() {    
+//     StreamingPlatformApp SpotifyApp;
+//     SpotifyApp.run();
+//     return 0;
+// }
