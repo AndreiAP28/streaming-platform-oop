@@ -15,11 +15,13 @@ int User::counter = 9000;
 User::User()
 :USER_ID(counter++),username(nullptr), password(nullptr), liked_songs(nullptr), likedSongs_num(0) {
     // cout << "CONSTRUCTOR USER FARA PARAMETRII" << endl;
-    cout << "User()" << endl;
+    // cout << "User()" << endl;
 }
 
 User::User(const char* username, const char* password, Song** liked_songs, int likedSongs_num)
 : USER_ID(counter++), likedSongs_num(likedSongs_num) {
+
+    // cout << "User()" << endl;
 
     if (username != nullptr) {
         this->username = new char[strlen(username) + 1];
@@ -49,6 +51,9 @@ User::User(const char* username, const char* password, Song** liked_songs, int l
 
 User::User(const char* username, const char* password)
 :USER_ID(counter++),liked_songs(nullptr), likedSongs_num(0) {
+
+    // cout << "User()" << endl;
+
     if (username != nullptr) {
         this->username = new char[strlen(username) + 1];
         strcpy(this->username, username);
@@ -65,7 +70,10 @@ User::User(const char* username, const char* password)
 }
 
 User::User(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num)
-:USER_ID(old_id), liked_songs(liked_songs), likedSongs_num(likedSongs_num) {
+:USER_ID(old_id) {
+
+    // cout << "User()" << endl;
+
     if (username != nullptr) {
         this->username = new char[strlen(username) + 1];
         strcpy(this->username, username);
@@ -80,7 +88,17 @@ User::User(int old_id, const char* username, const char* password, Song** liked_
         this->password = nullptr;
     }
 
-    cout << "User()" << endl;
+    if (likedSongs_num && liked_songs != nullptr) {
+        this->liked_songs = new Song*[likedSongs_num];
+
+        for (int i = 0; i < this->likedSongs_num; i ++) {
+            this->liked_songs[i] = liked_songs[i];
+        }
+    } else {
+        this->liked_songs = nullptr;
+        this->likedSongs_num = 0;
+    }
+
 }
 
 User::User(const User& other_user):
@@ -208,6 +226,8 @@ User& User::operator-=(int removed_index) {
         
         //!this->songs =temp_likedSongs;
         delete[]temp_likedSongs;
+
+        cout << "[SUCCES] You have removed the selected song from liked.\n";
 
         return *this;
 }
@@ -371,5 +391,5 @@ User::~User() {
         this->liked_songs = nullptr;
     }
 
-    cout << "~User()" << endl;
+    // cout << "~User()" << endl;
 }

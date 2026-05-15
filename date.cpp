@@ -6,7 +6,7 @@
 using namespace std;
 
 Date::Date() {
-    cout << "Date()" << endl;
+    // cout << "Date()" << endl;
 
     time_t now = time(0);
 
@@ -25,8 +25,12 @@ Date::Date() {
 
 Date::Date(int day, int month, int year)
     :day(day), month(month), year(year) {
-        cout << "Date(int d, int m, int y)" << endl;
+        // cout << "Date(int d, int m, int y)" << endl;
     };
+
+Date::Date(const Date& other_date): day(other_date.day), month(other_date.month), year(other_date.year){
+    // cout <<"Date()"<<endl;
+}
 
 
 void Date::setDate(int d, int m ,int y) {
@@ -54,5 +58,5 @@ void Date::formattedDate() const {
 
 
 Date::~Date() {
-    cout << "~Date()" << endl;
+    // cout << "~Date()" << endl;
 }

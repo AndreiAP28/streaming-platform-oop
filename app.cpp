@@ -13,11 +13,22 @@
 #include "user.h"
 #include "premium_user.h"
 #include "family_premium_user.h"
+#include "playable_item.h"
+
+//! TESTEAZA AIA CU CHRONO SI THREAD
 
 using namespace std;
 
+const int StreamingPlatformApp::MAX_QUEUE_SIZE = 50;
+
 StreamingPlatformApp::StreamingPlatformApp() 
-: artists_database(nullptr), artists_counter(0), playlists_database(nullptr), playlists_counter(0), songs_database(nullptr), songs_counter(0), users_database(nullptr), users_counter(0), current_user(nullptr) {}
+: artists_database(nullptr), artists_counter(0), playlists_database(nullptr), playlists_counter(0), songs_database(nullptr), songs_counter(0), users_database(nullptr), users_counter(0), current_user(nullptr), queue_counter(0) {
+    this->music_queue = new playableItem*[MAX_QUEUE_SIZE];
+
+    for (int i = 0;i < MAX_QUEUE_SIZE; i ++) {
+        this->music_queue[i] = nullptr; 
+    }
+}
 
 bool StreamingPlatformApp::duplicate_name_ignoreCase(const char* name1, const char* name2) {
     if (name1 == nullptr || name2 == nullptr) {
@@ -72,25 +83,47 @@ int StreamingPlatformApp::find_playlist_index_inDB_byID(int chosenID_by_user) co
     return -1;
 }
 
-void StreamingPlatformApp::printMainMenu() {
-    cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    cout << "|           STREAMING MUSIC PLATFORM APP         |\n";
-    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    cout << "|  Hello, " << this->current_user->getUsername() << "! How was your day?              |\n";
-    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    cout << "|  [1]. Add a New Artist in Database             |\n";
-    cout << "|  [2]. Add a New Song in Database               |\n";
-    cout << "|  [3]. Create a Playlist                        |\n";
-    cout << "|  [4]. Manage a Playlist (Add/Remove songs)     |\n";
-    cout << "|  [5]. View Playlists                           |\n";
-    cout << "|  [6]. View Registered Artists                  |\n";
-    cout << "|  [7]. View Registered Songs                    |\n";
-    cout << "|  [8]. Manage Liked Songs                       |\n";
-    cout << "|  [9]. View My Profile                          |\n";
-    cout << "|  [10]. Sign out                                |\n";
-    cout << "|  [0]. EXIT                                     |\n";
-    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+int StreamingPlatformApp::find_user_index_inDB() const {
+    for (int i = 0; i < this->users_counter; i ++) {
+        if (users_database[i] == current_user) {
+            return i;
+        }
+    }
 
+    return -1;
+}
+
+
+//!---------------- ADD IN DB ---------------------------------
+void StreamingPlatformApp::addinDB() {
+    bool looping = true, show_second_menu = true; 
+    while(looping) {
+        if (show_second_menu)  {
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            cout << "|  [1]. Add a New Artist in Database             |\n";
+            cout << "|  [2]. Add a New Song in Database               |\n";
+            cout << "|  [0]. Go Back to Main Menu                     |\n";
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            show_second_menu = false;
+        }
+        int user_choice = get_int_input_validation("Choose an action: ");
+        switch(user_choice) {
+            case 1:
+                this->AddNewArtistinDB();
+                show_second_menu = true;
+                break;
+            case 2:
+                this->AddNewSonginDB();
+                show_second_menu = true;
+                break;
+            case 0:
+                looping = false;
+                break;
+
+            default:
+                cout << "[!] Invalid option. Try again!\n";
+        }   
+    }
 }
 
 void StreamingPlatformApp::AddNewArtistinDB() {
@@ -211,6 +244,56 @@ void StreamingPlatformApp::AddNewSonginDB() {
     cout <<"\nSong '" << new_song->getTitle() << "' added to the Database!\n";
 
 
+}
+
+//! ------------------- EXPLORE LIBRARY ------------------------
+void StreamingPlatformApp::exploreLibrary() {
+    bool looping = true;
+    bool show_second_menu = true; 
+
+    while(looping) {
+        if (show_second_menu) {
+            cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            cout << "|  [1]. Create a New Playlist                    |\n";
+            cout << "|  [2]. Manage an Existing Playlist              |\n";
+            cout << "|  [3]. View All Playlists                       |\n";
+            cout << "|  [4]. View All Artists in Database             |\n";
+            cout << "|  [5]. View All Songs in Database               |\n";
+            cout << "|  [0]. Go Back to Main Menu                     |\n";
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            show_second_menu = false;
+        }
+
+        int user_choice = get_int_input_validation("Choose an action: ");
+
+        switch(user_choice) {
+            case 1:
+                this->CreatePlaylist();
+                show_second_menu = true;
+                break;
+            case 2:
+                this->ManagePlaylist();
+                show_second_menu = true;
+                break;
+            case 3:
+                this->ViewPlaylists();
+                show_second_menu = true;
+                break;
+            case 4:
+                this->ViewArtistsDB();
+                show_second_menu = true;
+                break;
+            case 5:
+                this->ViewSongsDB();
+                show_second_menu = true;
+                break;
+            case 0:
+                looping = false;
+                break;
+            default:
+                cout << " [!] Invalid option. Try again!\n";
+        }   
+    }
 }
 
 void StreamingPlatformApp::CreatePlaylist() {
@@ -391,24 +474,198 @@ void StreamingPlatformApp::ViewPlaylists() {
         }
     }
     cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-
+    
     char user_input = get_yesno_input_validation("\n[?] Would you like to view more about a playlist? (y/n): ");
-
+    
     if (user_input == 'y' || user_input == 'Y') {
-        int chosenIndex = get_int_input_validation(" <--- Enter the Playlist ID: ");
-
-        int playlist_index_input = this->find_playlist_index_inDB_byID(chosenIndex);
+        int chosenID = get_int_input_validation(" <--- Enter the Playlist ID: ");
+        
+        int playlist_index_input = this->find_playlist_index_inDB_byID(chosenID);
         if (playlist_index_input == -1) {
             cout << " [!] Invalid ID or you do not own this playlist!\n";
             return;
         }
+        
+        cout << *playlists_database[playlist_index_input];
+        if ((*playlists_database[playlist_index_input]).getSongsSize()){
+            cout << "Total Songs' Streams in this playlist: " << playlists_database[playlist_index_input]->calculateTotalStreams() << " streams.\n";
+        }
 
-        cout << *playlists_database[chosenIndex];
+        int user_choice = get_int_input_validation("\n[1] Play Now  ~  [2] Add to Queue  ~  [0] Go Back: ");
+        bool looping = true;
+            while (looping) {
+                switch(user_choice) {
+                    case 1: 
+                        playlists_database[playlist_index_input]->simulatePlayItem();
+                        looping = false;
+                        break;
+                    case 2:
+                        if (this->queue_counter < this->MAX_QUEUE_SIZE - 1) {
+                            music_queue[queue_counter ++] = playlists_database[playlist_index_input];
+                            cout << " [SUCCES] Playlist " << playlists_database[playlist_index_input]->getName() << " Added in the queue!\n";
+                        } else {
+                            cout << "[!] Queue is already full!\n";
+                        }
+                        looping = false;
+                        break;
+                    default:
+                    cout << "\n[!] Invalid choice. Please try again. \n";
+                        
+
+                }
+            }
+        
+        
     }
 }
 
+void StreamingPlatformApp::ViewArtistsDB() {
+    if (artists_counter == 0) {
+        cout << "[!] There are no artists registered yet.\n";
+        return;
+    }
+
+    cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED ARTISTS ~~~~~~~~~~~~~~~~~~~\n";
+    for (int i = 0;i < artists_counter; i ++) {
+        cout << "<- ID: [" << artists_database[i]->getArtistID() << "] -> " << artists_database[i]->getName() << " " << (artists_database[i]->getIsVerified() ? " (VERIFIED)" : "") << "\n";
+    }
+    cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+
+    char user_input = get_yesno_input_validation("\n[?] Would you like to view a specific artist's full profile? (y/n): ");
+
+    if (user_input == 'y' || user_input == 'Y') {
+        int chosenID = get_int_input_validation(" <--- Enter the Artist ID: ");
+       
+
+        int index_in_db = find_artist_index_inDB_byID(chosenID);
+    
+        // if exist in database print it and increase the monthlylisteners like you listened to it
+        if (index_in_db != -1) {
+            ++(*artists_database[index_in_db]);
+            cout << *artists_database[index_in_db];
+        } else {
+            cout <<" <--- [!] Invalid ID. Going back to menu!\n";
+        }
+    }
+}
+
+void StreamingPlatformApp::ViewSongsDB() { 
+    if (songs_counter == 0 ) {
+        cout << "[!] There are no songs registered yet.\n";
+        return;
+    }
+
+        cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~~\n";
+    for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
+        int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
+
+        char current_artistName[256];
+        int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
+
+        if (artistIndex_inDB != -1) {
+            strcpy(current_artistName, artists_database[artistIndex_inDB]->getName());
+        } else {
+            strcpy(current_artistName, "Unknown");
+        }
+
+        cout << " <- ID: [" <<songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
+    }
+    cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+
+    char user_input = get_yesno_input_validation("\n[?] Would you like to view a specific song's full profile? (y/n): ");
+   
+    if (user_input == 'y' || user_input == 'Y') {
+        int chosenID = get_int_input_validation(" <--- Enter the Song ID: ");
+
+        int index_in_db = this->find_song_index_inDB_byID(chosenID);
+
+        // if exist in database print it and increase the streams like you listened to it
+        if (index_in_db != -1) {
+            ++(*songs_database[index_in_db]);
+            cout << *songs_database[index_in_db];
+            cout << "\n [1] Play Now ~ [2] Add to Queue ~ [0] Go Back: \n";
+            int user_choice = get_int_input_validation("Choose an action: ");
+            
+            bool looping = true;
+            while (looping) {
+                switch(user_choice) {
+                    case 1: 
+                        songs_database[index_in_db]->simulatePlayItem();
+                        looping = false;
+                        break;
+                    case 2:
+                        if (this->queue_counter < this->MAX_QUEUE_SIZE - 1) {
+                            music_queue[queue_counter ++] = songs_database[index_in_db];
+                            cout << " [SUCCES] Song " << songs_database[index_in_db]->getTitle() << " Added in the queue!\n";
+                        } else {
+                            cout << "[!] Queue is already full!\n";
+                        }
+                        looping = false;
+                        break;
+                    case 0:
+                        looping = false;
+                        break;
+                    default:
+                    cout << "\n[!] Invalid choice. Please try again. \n";
+                        
+
+                }
+            }
+
+        } else {
+            cout << " <--- [!] Invalid ID. Going back to menu!\n";
+        }
+    }
+
+}
+
+//!------------------- ACCOUNT SETTINGS -----------------------
+void StreamingPlatformApp::AccountSettings() {
+    bool looping = true, show_second_menu = true; 
+    while(looping) {
+        if (show_second_menu)  {
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            cout << "|  [1]. View My Profile                          |\n";
+            cout << "|  [2]. Manage Liked Songs                       |\n";
+            cout << "|  [3]. Manage Subscriptions                     |\n";
+            cout << "|  [4]. Sign Out                                 |\n";
+            cout << "|  [0]. Go Back to Main Menu                     |\n";
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            show_second_menu = false;
+        }
+        int user_choice = get_int_input_validation("Choose an action: ");
+        switch(user_choice) {
+            case 1:
+                // cout << *current_user;
+                current_user->displayProfile();
+                show_second_menu = true;
+                break;
+            case 2:
+                this->ManageLikedSongs();
+                show_second_menu = true;
+                break;
+            case 3:
+                this->ManageSubscriptions();
+                show_second_menu = true;
+                break;
+            case 4:
+                cout << "\nLogging out... Goodbye, " << this->current_user->getUsername() << "!\n";
+                this->current_user = nullptr;
+                looping = false;
+                break;
+            case 0:
+                looping = false;
+                break;
+
+            default:
+                cout << "[!] Invalid option. Try again!\n";
+        }   
+    }
+};
+
 void StreamingPlatformApp::ManageLikedSongs() {
-    int user_choice = -1;
+    // int user_choice;
+    // int user_choice = -1;
     bool show_menu = true, liked_songs_looping = true;
     while (liked_songs_looping) {
         if (show_menu) {
@@ -422,7 +679,7 @@ void StreamingPlatformApp::ManageLikedSongs() {
             cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
         }
 
-        user_choice = get_int_input_validation("Choose an action: ");
+       int user_choice = get_int_input_validation("Choose an action: ");
     
         switch (user_choice) {
             case 1: {
@@ -509,15 +766,22 @@ void StreamingPlatformApp::ManageLikedSongs() {
                     cout << " <- ID: [" << current_user->getLikedSongs()[i]->getSongID() << "] -> " << current_user->getLikedSongs()[i]->getTitle() << "\n";
                 }
 
-                int songID_input = get_int_input_validation("\n[?] What song do you like (type Song ID): ");
-                int index_in_db = this->find_song_index_inDB_byID(songID_input);
-                if (index_in_db == -1) {
+                int songID_input = get_int_input_validation("\n[?] What song do you want to remove (type Song ID): ");
+                
+                int index_in_liked = -1;
+                for (int i = 0; i < liked_songs_num; i++) {
+                    if (current_user->getLikedSongs()[i]->getSongID() == songID_input) {
+                        index_in_liked = i; 
+                        break;
+                    }
+                }
+                if (index_in_liked == -1) {
                     cout << " <--- [!] Invalid ID. Going back to menu!\n";
                     show_menu = true;
                     break;
                 }
 
-                *current_user -= index_in_db;
+                *current_user -= index_in_liked;
 
                 show_menu = true;
                 break;
@@ -538,75 +802,164 @@ void StreamingPlatformApp::ManageLikedSongs() {
 
 }
 
-void StreamingPlatformApp::ViewArtistsDB() {
-    if (artists_counter == 0) {
-        cout << "[!] There are no artists registered yet.\n";
-        return;
-    }
+void StreamingPlatformApp::ManageSubscriptions() {
 
-    cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED ARTISTS ~~~~~~~~~~~~~~~~~~~\n";
-    for (int i = 0;i < artists_counter; i ++) {
-        cout << "<- ID: [" << artists_database[i]->getArtistID() << "] -> " << artists_database[i]->getName() << " " << (artists_database[i]->getIsVerified() ? " (VERIFIED)" : "") << "\n";
-    }
-    cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-
-    char user_input = get_yesno_input_validation("\n[?] Would you like to view a specific artist's full profile? (y/n): ");
-
-    if (user_input == 'y' || user_input == 'Y') {
-        int chosenID = get_int_input_validation(" <--- Enter the Artist ID: ");
-       
-
-        int index_in_db = find_artist_index_inDB_byID(chosenID);
+    FamilyPremiumUser* family_user = dynamic_cast<FamilyPremiumUser*>(this->current_user);
+    PremiumUser* premium_user = dynamic_cast<PremiumUser*>(this->current_user);
     
-        // if exist in database print it and increase the monthlylisteners like you listened to it
-        if (index_in_db != -1) {
-            ++(*artists_database[index_in_db]);
-            cout << *artists_database[index_in_db];
-        } else {
-            cout <<" <--- [!] Invalid ID. Going back to menu!\n";
+    bool is_family = (family_user != nullptr);
+    bool is_premium = (premium_user != nullptr);
+    
+    if (is_family) {
+        bool show_menu = true, subscription_looping  = true;
+        while (subscription_looping) {
+            if (show_menu) {
+                cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+                cout << "|             SUBSCRIPTION MANAGEMENT            |\n";
+                cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+                cout << "|  STATUS: FAMILY PLAN MANAGER                   |\n";
+                cout << "|  [1]. Add a Family Member                      |\n";
+                cout << "|  [2]. Remove a Family Member                   |\n";
+                cout << "|  [0]. Go Back                                  |\n";
+                cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            }
+
+            int user_choice = get_int_input_validation("Choose an action: ");
+            switch(user_choice) {
+                case 1: {
+                    char new_member[256];
+                    get_name_input_validation("Enter new member's name: ", new_member, 256);
+                    family_user->addMember(new_member);
+                    show_menu = true;
+                    break;
+                }
+
+                case 2:
+                    //! CONTINUE HERE
+                    char removed_member[256];
+                    get_name_input_validation("Enter the member's name you want to remove: ", removed_member, 256);
+                    family_user->removeMember(removed_member);
+                    show_menu = true;
+                    break;
+
+                case 0:
+                    cout << "\nReturning to Main Menu...\n";
+                    return;
+
+                default:
+                    cout << "\n[!] Invalid Choice. Try again!\n";
+                    show_menu = false;
+
+            }
         }
+    
+    } else if (is_premium){
+        while(true) {
+            cout << "|  STATUS: PREMIUM PLAN ACTIVE                   |\n";
+            cout << "|  [1]. Upgrade to FAMILY PLAN ($14.99/mo)       |\n";
+            cout << "|  [0]. Go Back                                  |\n";
+            cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+            int user_choice = get_int_input_validation("Choose an action: ");
+            if (user_choice == 0) {
+                return;
+            } else if (user_choice == 1) {
+                break;
+            } 
+            else {
+                cout << "[!] Invalid option. Try again!";
+            }
+            
+
+        }
+    } else {
+        cout << "|  STATUS: FREE TIER (AD-SUPPORTED)              |\n";
+        cout << "|  [1]. Buy Standard Plan ($4.99/mo)             |\n";
+        cout << "|  [2]. Buy Student Plan ($2.99/mo)              |\n";
+        cout << "|  [3]. Buy Annual Plan ($49.99/yr)              |\n";
+        cout << "|  [4]. Buy FAMILY PLAN ($14.99/mo) - 6 Accounts |\n";
+        cout << "|  [0]. Go Back                                  |\n";
+        cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    }
+
+    int user_choice = (premium_user != nullptr) ? 4 : get_int_input_validation("Choose a plan: ");
+    if (!user_choice) return;
+
+    int db_index = find_user_index_inDB();
+    int saved_id = current_user->getUserID();
+    char saved_name[256];
+    char saved_password[256];
+    strcpy(saved_name, current_user->getUsername());
+    strcpy(saved_password, current_user->getPassword());
+    int saved_songs_num = current_user->getSongsArrSize();
+
+
+    User* upgraded_subs_user = nullptr;
+    Date today;
+    // Here the normal User it will be replaced with the class for PremiumUser/FamilyPremiumUser so it will activate the polymorphism
+    switch(user_choice) {
+        case 1:
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, STANDARD_MONTHLY, today);            
+            break;
+        case 2:
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, STUDENT_PLAN, today);            
+            break;
+        case 3:
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, ANNUAL_DISCOUNT, today);            
+            break;
+        case 4: {
+            upgraded_subs_user = new FamilyPremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, today);            
+            
+            FamilyPremiumUser* family_plan_user = dynamic_cast<FamilyPremiumUser*>(upgraded_subs_user);
+            char currentMemberName[256];
+            get_name_input_validation("Enter your name that will be display as member: ", currentMemberName, 256);
+            family_plan_user->addMember(currentMemberName);
+            break;
+        }
+        default:
+            cout << "[!] Invalid choice./n";
+            return;        
+    }
+
+    delete current_user;
+
+
+    users_database[db_index] = upgraded_subs_user;
+    current_user = upgraded_subs_user;
+
+    cout << "[SUCCES] Congratulations! Subscription Activated!\n";
+}
+//!-----------------------------------------------------------
+
+void StreamingPlatformApp::playQueue() {
+    if(this->queue_counter == 0) {
+        cout << "\n############## [!] Your queue is empty! ##############  \n";
+    } else {
+        cout << "\n ############## STARTING PLAYBACK QUEUE ############## \n";
+        for (int i = 0;i < this->queue_counter; i ++) {
+            this->music_queue[i]->simulatePlayItem();
+
+            this->music_queue[i] = nullptr;
+        }
+
+        this->queue_counter = 0;
+        cout << "\n [!] ############## Queue finished and cleared! ##############\n";
     }
 }
 
-void StreamingPlatformApp::ViewSongsDB() { 
-    if (songs_counter == 0 ) {
-        cout << "[!] There are no songs registered yet.\n";
-        return;
-    }
-
-        cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~~\n";
-    for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
-        int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
-
-        char current_artistName[256];
-        int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
-
-        if (artistIndex_inDB != -1) {
-            strcpy(current_artistName, artists_database[artistIndex_inDB]->getName());
-        } else {
-            strcpy(current_artistName, "Unknown");
-        }
-
-        cout << " <- ID: [" <<songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
-    }
-    cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-
-    char user_input = get_yesno_input_validation("\n[?] Would you like to view a specific song's full profile? (y/n): ");
-   
-    if (user_input == 'y' || user_input == 'Y') {
-        int chosenID = get_int_input_validation(" <--- Enter the Song ID: ");
-
-        int index_in_db = this->find_song_index_inDB_byID(chosenID);
-
-        // if exist in database print it and increase the streams like you listened to it
-        if (index_in_db != -1) {
-            ++(*songs_database[index_in_db]);
-            cout << *songs_database[index_in_db];
-        } else {
-            cout << " <--- [!] Invalid ID. Going back to menu!\n";
-        }
-    }
-
+void StreamingPlatformApp::printMainMenu() {
+    cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|           STREAMING MUSIC PLATFORM APP         |\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|  Hello, " << this->current_user->getUsername() << "! How was your day?              |\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    cout << "|  [1]. Add a New Artist/Song in Database        |\n";
+    cout << "|  [2]. Explore Library                          |\n";
+    cout << "|  [3]. Play Queue                               |\n";
+    cout << "|  [4]. Account Settings                         |\n";
+    cout << "|  [0]. EXIT                                     |\n";
+    cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    
+    
 }
 
 void StreamingPlatformApp::connectingMenu() {
@@ -642,73 +995,6 @@ void StreamingPlatformApp::connectingMenu() {
         }
     }
 
-}
-
-void StreamingPlatformApp::mainMenu(bool& app_run_flag) {   
-        int user_input;
-        bool main_looping = true, show_menu = true;
-        while (main_looping) {
-            if (show_menu) {
-                this->printMainMenu();
-                show_menu = false;
-            }
-    
-            user_input = get_int_input_validation("\n<--- Enter an action's number: ");
-    
-            switch(user_input) {
-                case 1:
-                    this->AddNewArtistinDB();
-                    show_menu = true;
-                    break;
-                case 2:
-                    this->AddNewSonginDB();
-                    show_menu = true;
-                    break;
-                case 3:
-                    this->CreatePlaylist();
-                    show_menu = true;
-                    break;
-                case 4:
-                    this->ManagePlaylist();
-                    show_menu = true;
-                    break;
-                case 5:
-                    this->ViewPlaylists();
-                    show_menu = true;
-                    break;
-                case 6:
-                    this->ViewArtistsDB();
-                    show_menu = true;
-                    break;
-                case 7:
-                    this->ViewSongsDB();
-                    show_menu = true;
-                    break;    
-                case 8:
-                    this->ManageLikedSongs();
-                    show_menu = true;
-                    break; 
-                case 9:
-                    cout << *current_user;
-                    show_menu = true;
-                    break;
-                case 10:
-                    cout << "\nLogging out... Goodbye, " << this->current_user->getUsername() << "!\n";
-                    this->current_user = nullptr;
-                    main_looping = false;
-                    break;
-                case 0:
-                    cout << "\nTHE APP IS SHUTTING DOWN..... SEE YOU SOON!\n";
-                    main_looping = false;
-                    app_run_flag = false;
-
-                    break;
-                default:
-                    cout << "\n[!] Invalid choice. Please try again. \n";
-                
-            }
-    
-        }
 }
 
 void StreamingPlatformApp::signUp() {
@@ -798,6 +1084,49 @@ void StreamingPlatformApp::login() {
 
 }
 
+void StreamingPlatformApp::mainMenu(bool& app_run_flag) {   
+        int user_input;
+        bool main_looping = true, show_menu = true;
+        while (main_looping) {
+            if (show_menu) {
+                this->printMainMenu();
+                show_menu = false;
+            }
+    
+            user_input = get_int_input_validation("\n<--- Enter an action's number: ");
+    
+            switch(user_input) {
+                case 1:
+                    this->addinDB();
+                    show_menu = true;
+                    break;
+
+                case 2:
+                    this->exploreLibrary();
+                    show_menu = true;
+                    break;
+                case 3:
+                    this->playQueue();
+                    show_menu = true;
+                    break;
+                case 4:
+                    this->AccountSettings();
+                    main_looping = false;
+                    break;
+                case 0:
+                    cout << "\nTHE APP IS SHUTTING DOWN..... SEE YOU SOON!\n";
+                    main_looping = false;
+                    app_run_flag = false;
+
+                    break;
+                default:
+                    cout << "\n[!] Invalid choice. Please try again. \n";
+                
+            }
+    
+        }
+}
+
 void StreamingPlatformApp::run() {
     bool app_run_flag = true;
     while (app_run_flag) {
@@ -811,16 +1140,78 @@ void StreamingPlatformApp::run() {
     }
 }
 
-StreamingPlatformApp::~StreamingPlatformApp() {
+void StreamingPlatformApp::preloadedData() {
+    cout << "[i] Booting Database... Injecting Mock Data...\n";
 
+    this->artists_counter = 10;
+    this->artists_database = new Artist*[10];
+
+    artists_database[0] = new Artist("Travis Scott", 60000000, 0, nullptr, true);
+    artists_database[1] = new Artist("Lil Uzi Vert", 35000000, 0, nullptr, true);
+    artists_database[2] = new Artist("A$AP Rocky", 30000000, 0, nullptr, true);
+    artists_database[3] = new Artist("Drake", 80000000, 0, nullptr, true);
+    artists_database[4] = new Artist("Kendrick Lamar", 55000000, 0, nullptr, true);
+    artists_database[5] = new Artist("The Weeknd", 100000000, 0, nullptr, true);
+    artists_database[6] = new Artist("Playboi Carti", 25000000, 0, nullptr, true);
+    artists_database[7] = new Artist("Future", 45000000, 0, nullptr, true);
+    artists_database[8] = new Artist("Tyler, The Creator", 32000000, 0, nullptr, true);
+    artists_database[9] = new Artist("Metro Boomin", 50000000, 0, nullptr, true);
+
+    this->songs_counter = 50;
+    this->songs_database = new Song*[50];
+
+    const char* travis_songs[] = {"SICKO MODE", "goosebumps", "STARGAZING", "HIGHEST IN THE ROOM", "BUTTERFLY EFFECT"};
+    const char* uzi_songs[] = {"XO Tour Llif3", "20 Min", "Money Longer", "The Way Life Goes", "Just Wanna Rock"};
+    const char* rocky_songs[] = {"Praise The Lord", "Sundress", "L$D", "Everyday", "F**kin' Problems"};
+    const char* drake_songs[] = {"God's Plan", "One Dance", "Hotline Bling", "Passionfruit", "Jimmy Cooks"};
+    const char* kendrick_songs[] = {"HUMBLE.", "DNA.", "Alright", "Swimming Pools", "Money Trees"};
+    const char* weeknd_songs[] = {"Blinding Lights", "Starboy", "The Hills", "Save Your Tears", "Die For You"};
+    const char* carti_songs[] = {"Magnolia", "Sky", "Shoota", "wokeuplikethis*", "R.I.P."};
+    const char* future_songs[] = {"Mask Off", "March Madness", "Codeine Crazy", "Life Is Good", "Stick Talk"};
+    const char* tyler_songs[] = {"EARFQUAKE", "See You Again", "NEW MAGIC WAND", "WUSYANAME", "Yonkers"};
+    const char* metro_songs[] = {"Space Cadet", "No Complaints", "10 Freaky Girls", "Overdue", "Too Many Nights"};
+
+    const char** all_songs[] = {travis_songs, uzi_songs, rocky_songs, drake_songs, kendrick_songs, weeknd_songs, carti_songs, future_songs, tyler_songs, metro_songs};
+
+    int s_idx = 0;
+
+    for (int a_idx = 0; a_idx < 10; a_idx++) {
+        int current_artist_id = artists_database[a_idx]->getArtistID();
+        
+        for (int i = 0; i < 5; i++) {
+            // Giving random duration between 2m and 3m to the songs
+            int random_duration = 120 + (rand() % 60); 
+            long long random_streams = 500000 + (rand() % 50000000); 
+
+            int random_year = 2000 + (rand() % 20);
+            int random_month = 1 + (rand() % 12);
+            int random_day = 1 + (rand() % 28); // safety for feb
+
+            songs_database[s_idx] = new Song(all_songs[a_idx][i], random_duration, current_artist_id, 0, nullptr, random_streams, Date(random_day, random_month, random_year));
+            
+            artists_database[a_idx]->addTopSong(all_songs[a_idx][i]);
+            
+            s_idx++;
+        }
+    }
+    
+    cout << "[SUCCESS] " << artists_counter << " Artists and " << songs_counter << " Songs successfully loaded into the matrix!\n";
+
+}
+
+StreamingPlatformApp::~StreamingPlatformApp() {
     // cout << "DESTRUCTOR PT APP A AVUT LOC GOODBYE RETURN 0 PAPA S A TERMINAT HAHA DAI RUN IAR PAPA\n";
 
-    if (this->artists_database != nullptr) {
-        for (int i = 0; i < this->artists_counter; i++) {
-            delete this->artists_database[i];
+    if (this->music_queue != nullptr) {
+        delete[] this->music_queue;
+    }
+
+    if (this->users_database != nullptr) {
+        for (int i = 0; i < this->users_counter; i++) {
+            delete this->users_database[i];
         }
-        delete[] this->artists_database;      
-        this->artists_counter = 0;
+        delete[] this->users_database;
+        this->users_counter = 0;
     }
 
     if (this->playlists_database != nullptr) {
@@ -839,18 +1230,27 @@ StreamingPlatformApp::~StreamingPlatformApp() {
         this->songs_counter = 0;
     }
 
-    if (this->users_database != nullptr) {
-        for (int i = 0; i < this->users_counter; i++) {
-            delete this->users_database[i];
+    if (this->artists_database != nullptr) {
+        for (int i = 0; i < this->artists_counter; i++) {
+            delete this->artists_database[i];
         }
-        delete[] this->users_database;
-        this->users_counter = 0;
+        delete[] this->artists_database;      
+        this->artists_counter = 0;
     }
+
+    
+
+    
+
+    
 }
 
 
-// int main() {    
-//     StreamingPlatformApp SpotifyApp;
-//     SpotifyApp.run();
-//     return 0;
-// }
+int main() {    
+    // playableItem test; eroare 
+
+    StreamingPlatformApp SpotifyApp;
+    SpotifyApp.preloadedData();
+    SpotifyApp.run();
+    return 0;
+}

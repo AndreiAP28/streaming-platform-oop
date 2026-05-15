@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstring>
+#include <chrono>
+#include <thread>
 #include <stdexcept>
 
 // #include "classes.h"
@@ -16,6 +18,7 @@ int Playlist::counter = 5000;
 //!--------------------------------CONSTRUCTORS------------------------------------------------
 Playlist::Playlist(): PLAYLIST_ID(counter++), songs(nullptr), songsNum(0), totalDurationSec(0) {
     // cout<<"CONSTRUCTORUL FARA PARAMETRII" << endl;
+    // cout << "Playlist()" << endl;
     this->name = new char[4];
     strcpy(this->name, "N/A");
 
@@ -25,6 +28,8 @@ Playlist::Playlist(): PLAYLIST_ID(counter++), songs(nullptr), songsNum(0), total
 
 Playlist::Playlist(const char* name, const char* owner_username, Song** songs, int songsNum, int totalDuration = 0)
 :PLAYLIST_ID(counter++), songsNum(songsNum), totalDurationSec(0) {
+
+    // cout << "Playlist()" << endl;
 
     if(name != nullptr) {
         this->name = new char[strlen(name) + 1];
@@ -59,6 +64,8 @@ Playlist::Playlist(const char* name, const char* owner_username, Song** songs, i
 
 Playlist::Playlist(const char* name, const char* owner_username)
 :PLAYLIST_ID(counter++), songs(nullptr), songsNum(0), totalDurationSec(0) {
+
+    // cout << "Playlist()" << endl;
 
     if (name != nullptr) {
         this->name = new char[strlen(name) + 1];
@@ -329,7 +336,6 @@ void Playlist::addSong(Song& new_song) {
     //! this->songs = tempSongs;
     delete[] tempSongs;
 
-    // cout << "AM ADAUGAT PIESA: " << new_song.getTitle() << endl;
 }
 
 void Playlist::removeSong(int removed_index) { 
@@ -394,9 +400,41 @@ void Playlist::setOwnerUsername(const char* new_owner) {
     this->owner_username = new char[strlen(new_owner) + 1];
     strcpy(this->owner_username, new_owner);
 }
+
+//!-------------------- INHERITED METHODS FROM ABSTRACT CLASS -> PLAYABLEITEM ------------
+void Playlist::simulatePlayItem() {
+    cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    cout << "  [i] LOADING PLAYLIST: " << this->name << "\n";
+    cout << "  [i] Total Tracks: " << this->songsNum << "\n";
+    cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+
+    this_thread::sleep_for(chrono::seconds(1));
+
+    for(int i = 0; i < this->songsNum; i ++ ){
+        cout << "\n [ Track " << (i + 1) << " of" << this->songsNum << " ]";
+        songs[i]->simulatePlayItem();
+    }
+
+    cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    cout << "Playlist finished!\n";
+    cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+
+
+}
+
+long long Playlist::calculateTotalStreams() const {
+    long long total_streams = 0;
+    for (int i = 0; i < songsNum; i ++) {
+        total_streams += songs[i]->getStreams();
+    }
+    return total_streams;
+}
+
 //!---------------------------------DESTRUCTORS------------------------------------
 Playlist::~Playlist()  {
     // cout << "DESTRUCTORUL PT PLAYLIST A AVUT LOC" << endl;
+    // cout << "~Playlist()" << endl;
+    
     if (this->name != nullptr) {
         delete[] this->name;
         this->name = nullptr;

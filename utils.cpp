@@ -58,7 +58,7 @@ void get_name_input_validation(const char* prompt_message, char* input, int inpu
     while(true) {
         cout << prompt_message;
         cin.getline(input, input_size);
-        if (strlen(input) != 0 && input[0] != ' '){
+        if (strlen(input) != 0 && input[0] != ' ' && input != nullptr){
             break;
         } else {
             cout << "[!] Invalid name. Try again!\n";

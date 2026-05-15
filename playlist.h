@@ -2,10 +2,12 @@
 
 #include <iostream>
 // #include "song.h"
+#include "playable_item.h"
 
 class Song;
 
-class Playlist {
+
+class Playlist: public playableItem {
     static int counter;
     const int PLAYLIST_ID;
     char* name;
@@ -57,6 +59,10 @@ public:
     
     void setName(const char* name);
     void setOwnerUsername(const char* new_owner);
+    
+    //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
+    void simulatePlayItem() override;
+    long long calculateTotalStreams() const override;
 
     //!     DESTRUCTORS
     ~Playlist();

@@ -23,10 +23,11 @@ public:
     static int getMaxAccounts() { return MAX_ACCOUNTS;}
     int getCurrentAccountsNum() const { return connectedAccounts;}
     const char* getMember(int idx) const;    
-
-    //!----------------------- SETTERS ---------------------
+    void printMembers() const; 
     //!----------------------- OTHER METHODS ---------------------
     void displayProfile() const override;
+    bool addMember(const char* new_member);
+    bool removeMember(const char* removed_member);
     //!----------------------- DESTRUCTOR ---------------------
     ~FamilyPremiumUser();
 };

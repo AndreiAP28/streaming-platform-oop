@@ -1,5 +1,8 @@
 #include <iostream>
 #include <cstring>
+#include <thread>
+#include <chrono>
+
 
 // #include "classes.h"
 
@@ -16,8 +19,7 @@ int Song::counter = 3000;
 Song::Song():
  SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr) ,streams(0), releaseDate() {
     // cout<<"CONSTRUCTORUL SONG DEFAULT CREAT"<<endl;
-    // se apeleaza by default constructorul default pt date nu trebuia adaugat si aici
-
+    // cout << "Song()" << endl;
     this->title = new char[4];
     strcpy(this->title, "N/A");
 
@@ -27,7 +29,8 @@ Song::Song():
 Song::Song(const char* title, int durationSec, int artistID, int featuresSize,const char** artistsFeatures, long long streams, const Date& dateParam) 
 : SONG_ID(counter++), durationSec(durationSec), artistID(artistID), featuresSize(featuresSize), streams(streams), releaseDate(dateParam) {
     // cout << "CONSTRUCTORUL SONG CU TOTI PARAM CREAT" << endl;
-    
+    // cout << "Song()" << endl;
+
     this->title = new char[strlen(title) + 1];
     strcpy(this->title, title);
 
@@ -49,6 +52,8 @@ Song::Song(const char* title, int durationSec, int artistID, int featuresSize,co
 Song::Song(const char* title)
 :SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr), streams(0), releaseDate() {
     // cout << "CONSTRUCTOR SONG CU TITLU CREAT" << endl;
+    // cout << "Song()" << endl;
+
 
     this->title = new char[strlen(title) + 1];
     strcpy(this->title, title);
@@ -274,9 +279,8 @@ ostream& operator<<(ostream& os,const Song& song) {
     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     os << "|  STREAMS: " << song.streams << "\n";
     os << "|  DURATION: " << song.durationSec << " seconds\n";
+    os << "|  RELEASE DATE: " << song.releaseDate.getDay() << "/" <<song.releaseDate.getMonth() << "/" << song.releaseDate.getYear() << endl;
     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-
-    return os;;
     
 
     return os;
@@ -318,9 +322,27 @@ void Song::setTitle(const char* new_title) {
     strcpy(this->title, new_title);
 }
 
+//!------------------ INHERITED FUNCTIONS FROM ABSTRACT CLAS PLAYABLEITEM
+void Song::simulatePlayItem() {
+    cout << "\n [|>] Now Playing Audio Track: " << this->title << "...\n";
+    cout << "  ----------------------------------------\n";
+    cout << "   [===||===|||======||======|||||===||]  \n"; 
+    cout << "  ----------------------------------------\n";
+
+    this_thread::sleep_for(chrono::seconds(1));
+
+    ++(*this);
+
+}
+
+long long Song::calculateTotalStreams() const {
+    return this->streams;
+}
+
 //!-------------------------DESTRUCTOR------------------------------------
 Song::~Song() {
     // cout << "DESTRUCTOR SONG A AVUT LOC!!" << endl;
+    // cout << "~Song()" << endl;
 
     if(this->title != nullptr) { 
         delete[] title;
@@ -339,7 +361,3 @@ Song::~Song() {
 }
 
 
-// int main() {
-//     Song s1;
-//     return 0;
-// }

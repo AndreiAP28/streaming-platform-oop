@@ -9,6 +9,7 @@ public:
     //!-------------------- CONSTRUCTORS ----------------------
     Date();
     Date(int day, int month, int year);
+    Date(const Date& other_day);
 
     //!------------------- DESTRUCTOR -----------------------   
     ~Date();

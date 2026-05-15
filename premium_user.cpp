@@ -9,19 +9,19 @@ using namespace std;
 
 PremiumUser::PremiumUser()
 :User(), expirationDate() {
-    cout << "PremiumUser()" << endl;
+    // cout << "PremiumUser()" << endl;
     setSubsPlan(STANDARD_MONTHLY);
 }
 
 PremiumUser::PremiumUser(subsPlan planName)
 :User(), expirationDate() {
-    cout<< "PremiumUser()" << endl;
+    // cout<< "PremiumUser()" << endl;
     setSubsPlan(planName);
 }
 
 PremiumUser::PremiumUser(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num, subsPlan planName, const Date& expirationDate)
 :User(old_id, username, password, liked_songs, likedSongs_num), expirationDate(expirationDate) {
-    cout << "PremiumUser()" << endl;
+    // cout << "PremiumUser()" << endl;
     setSubsPlan(planName);
 }
 //!------------------- GETTERS ---------------------
@@ -108,7 +108,7 @@ void PremiumUser::displayProfile() const {
     cout << "|                  PREMIUM PLAN                  |\n";
     cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     
-    cout << "|  CURRENT PLAN: " << planName << "\n";
+    cout << "|  CURRENT PLAN: " << this->getPlanName() << "\n";
     cout << "|  MONTHLY FEE : $" << subsFee << "\n";
     
     cout << "|  STUDENT     : " << (isStudent ? "YES" : "NO") << "\n";
@@ -120,5 +120,5 @@ void PremiumUser::displayProfile() const {
 }
 //!------------------- DESTRUCTOR ---------------------
 PremiumUser::~PremiumUser() {
-    cout << "~PremiumUser()" << endl;
+    // cout << "~PremiumUser()" << endl;
 }

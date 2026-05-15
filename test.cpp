@@ -6,10 +6,9 @@
 #include "family_premium_user.h"
 using namespace std;
 
-//! ADD DYNAMIC CAST TO VERIFY IF THE CURRENT USER HAS FAMILY ACCOUNT CANT CHANGE TO SINGLE PLAN    
 
 
-int main() {
+// int main() {
 
     // User* premiumUser = new PremiumUser();  
     // delete premiumUser; 
@@ -52,25 +51,28 @@ int main() {
     //     cout << "-------------------------------------------------------- \n\n\n\n";
     // }
 
-    User** array = new User*[3];
-    array[0] = new User();
-    array[1] = new PremiumUser();
-    array[2] = new FamilyPremiumUser();
-    for(int i = 0; i < 3; i ++) {
-        array[i]->displayProfile();
-    }
+    // User** array = new User*[3];
+    // array[0] = new User();
+    // array[1] = new PremiumUser();
+    // array[2] = new FamilyPremiumUser();
+    // for(int i = 0; i < 3; i ++) {
+    //     array[i]->displayProfile();
+    // }
 
-    User array2[3] = {
-        User(),
-        PremiumUser(),
-        PremiumUser()
-    };
+    // User array2[3] = {
+    //     User(),
+    //     PremiumUser(),
+    //     PremiumUser()
+    // };
     
-    array2[2].displayProfile();
-    cout << "========================================\n";
+    // array2[2].displayProfile();
+    // cout << "========================================\n";
 
-    User* test = new PremiumUser[3];
-    for (int i = 0; i < 3;  i ++)
-        test->displayProfile();
-    return 0;   
-}
+    // User* test = new PremiumUser[3];
+    // for (int i = 0; i < 3;  i ++)
+    //     test->displayProfile();
+
+//     Date today;
+//     today.formattedDate();
+//     return 0;   
+// }

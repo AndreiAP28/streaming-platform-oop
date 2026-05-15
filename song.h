@@ -2,8 +2,9 @@
 
 #include <iostream>
 #include "date.h"
+#include "playable_item.h"
 
-class Song { 
+class Song: public playableItem { 
     static int counter;
     const int SONG_ID;
     char* title;
@@ -84,6 +85,10 @@ public:
     void addFeature(const char* featureName);
     void setArtistID(int id) { this->artistID = id;};
     void setTitle(const char* song_title);
+
+    //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
+    void simulatePlayItem() override;
+    long long calculateTotalStreams() const override;
 
     //!     DESTRUCTOR
     ~Song();
