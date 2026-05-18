@@ -19,13 +19,13 @@ PremiumUser::PremiumUser(subsPlan planName)
     setSubsPlan(planName);
 }
 
-PremiumUser::PremiumUser(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num, subsPlan planName, const Date& expirationDate)
-:User(old_id, username, password, liked_songs, likedSongs_num), expirationDate(expirationDate) {
+PremiumUser::PremiumUser(int old_id, const string& username, const string& password, const vector<Song*>& liked_songs, subsPlan planName, const Date& expirationDate)
+:User(old_id, username, password, liked_songs), expirationDate(expirationDate) {
     // cout << "PremiumUser()" << endl;
     setSubsPlan(planName);
 }
 //!------------------- GETTERS ---------------------
-const char* PremiumUser::getPlanName() const {
+string PremiumUser::getPlanName() const {
     switch(planName) {
         case STANDARD_MONTHLY:
             return "Standard Monthly";

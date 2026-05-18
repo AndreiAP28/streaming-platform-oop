@@ -1,25 +1,23 @@
 #include <iostream>
-#include <cstring>
-#include <cctype>
+#include <string>
 
 #include "utils.h"
 
 using namespace std;
 
-int get_int_input_validation(const char* prompt_message) {
-    char input[256];
+int get_int_input_validation(const string& prompt_message) {
+    string input;
     while (true) {
         cout << prompt_message;
-        cin.getline(input, 256);
+        getline(cin, input);
 
-        if (strlen(input) == 0) {
+        if (input.empty()) {
             cout << "[!] You MUST give an input!\n";
             continue;
         }
 
         bool isInt = true;
-        int input_size = strlen(input);
-        for (int i = 0; i < input_size ; i ++){
+        for (int i = 0; i < static_cast<int>(input.size()) ; i ++){
             if (input[i] < '0' || input[i] > '9') {
                 isInt = false;
                 break;
@@ -27,7 +25,7 @@ int get_int_input_validation(const char* prompt_message) {
         }
 
         if (isInt) {
-            return atoi(input);
+            return stoi(input);
         } else {
             cout << "[!] Invalid input. Input MUST be INTEGER!\n";
         }
@@ -35,13 +33,13 @@ int get_int_input_validation(const char* prompt_message) {
     }
 }
 
-char get_yesno_input_validation(const char* prompt_message) {
-    char user_input[256];
+char get_yesno_input_validation(const string& prompt_message) {
+    string user_input;
     while (true) {
         cout << prompt_message;
-        cin.getline(user_input,256);
+        getline(cin, user_input);
 
-        if (strlen(user_input) == 1) {
+        if (user_input.size() == 1) {
             char user_input_char = user_input[0];
 
             user_input_char = tolower(user_input_char);            
@@ -54,14 +52,16 @@ char get_yesno_input_validation(const char* prompt_message) {
     }
 }
 
-void get_name_input_validation(const char* prompt_message, char* input, int input_size) {
+string get_name_input_validation(const string& prompt_message) {
+    string input;
     while(true) {
         cout << prompt_message;
-        cin.getline(input, input_size);
-        if (strlen(input) != 0 && input[0] != ' ' && input != nullptr){
-            break;
-        } else {
-            cout << "[!] Invalid name. Try again!\n";
+        getline(cin, input);
+
+        if (!input.empty() && input[0] != ' ') {
+            return input;
         }
+
+        cout << "[!] Invalid name. Try again!\n";
     }
 }

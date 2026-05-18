@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+
 class playableItem {
 public:
     virtual void simulatePlayItem() = 0;
@@ -9,4 +10,4 @@ public:
 };
 
 
-inline playableItem::~playableItem() {}    
+inline playableItem::~playableItem() {};   

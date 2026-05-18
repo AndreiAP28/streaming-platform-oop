@@ -1,6 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <unordered_map>
+#include <list>
+#include <vector>
+
 
 
 class Artist;
@@ -64,5 +69,5 @@ private:
     int find_song_index_inDB_byID(int chosenID_by_user) const;
     int find_playlist_index_inDB_byID(int chosenID_by_user) const;
     int find_user_index_inDB() const;
-    bool duplicate_name_ignoreCase(const char* name1, const  char* name2);
+    bool duplicate_name_ignoreCase(const std::string& name1, const std::string& name2);
 };

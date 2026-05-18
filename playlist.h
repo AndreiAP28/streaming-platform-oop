@@ -1,19 +1,23 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
+#include <string>
+
+
 // #include "song.h"
 #include "playable_item.h"
 
 class Song;
-
+//! CAND FOLOSIM UN POINTER CATRE O CLASA E DE AJUNS SA II PROMITEM COMPILATORULUI CA ACEA CLASA EXISTA
+//! CAND FOLOSIM DIRECT PT MOSTENIRE O CLASA DIN ALT HEADER SAU ATRIBUT DIRECT ACEA CLASA TREBUIE INCLUS ACEL HEADER
 
 class Playlist: public playableItem {
     static int counter;
     const int PLAYLIST_ID;
-    char* name;
-    char* owner_username;
-    Song** songs;
-    int songsNum;
+    std::string name;
+    std::string owner_username;
+    std::vector<Song*> songs;
     int totalDurationSec;
 
 public:
@@ -22,12 +26,12 @@ public:
     
     //! song* const* -> lock the addresses but you can access the object 
     //! const Song* const* -> lock both addresses and the object from that address
-    Playlist(const char* name, const char* owner_username, Song** songs, int songsNum, int totalDuration );
-    Playlist(const char* name, const char* owner_username);
-    Playlist(const Playlist& other_playlist);
+    Playlist(const std::string& name, const std::string& owner_username, const std::vector<Song*>& songs, int totalDuration );
+    Playlist(const std::string& name, const std::string& owner_username);
+    // Playlist(const Playlist& other_playlist);
 
     //!     OVERWRITTING OPERATORS
-    Playlist& operator=(const Playlist& other_playlist);
+    // Playlist& operator=(const Playlist& other_playlist);
 
     Playlist& operator-=(int removed_index);
     Playlist& operator+=(Song& new_song);
@@ -45,11 +49,11 @@ public:
     
     //!     GETTERS
     static int getCounter() { return counter; }
-    const char* getName() const { return name; }
-    const char* getOwnerUsername() const { return owner_username; }
+    std::string getName() const { return name; }
+    std::string getOwnerUsername() const { return owner_username; }
     const int getPlaylistID() const { return PLAYLIST_ID; }
-    Song** getSongs() const { return songs; }
-    int getSongsSize() const { return songsNum; } 
+    const std::vector<Song*>& getSongs() const { return songs; }
+    int getSongsSize() const { return songs.size(); } 
     int getTotalDuration() const { return totalDurationSec; }
     //!     SETTERS
 
@@ -57,15 +61,15 @@ public:
     void addSong(Song& newSong);
     void removeSong(int removed_index);
     
-    void setName(const char* name);
-    void setOwnerUsername(const char* new_owner);
+    void setName(const std::string& name);
+    void setOwnerUsername(const std::string& new_owner);
     
     //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
     void simulatePlayItem() override;
     long long calculateTotalStreams() const override;
 
     //!     DESTRUCTORS
-    ~Playlist();
+    // ~Playlist();
 
 };
 

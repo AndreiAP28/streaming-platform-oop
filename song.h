@@ -1,17 +1,20 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <vector>
+
+
 #include "date.h"
 #include "playable_item.h"
 
 class Song: public playableItem { 
     static int counter;
     const int SONG_ID;
-    char* title;
+    std::string title;
     int durationSec;
     int artistID;
-    int featuresSize;
-    char** artistsFeatures;
+    std::vector<std::string> artistsFeatures;
     long long streams;
     Date releaseDate;
 
@@ -19,13 +22,13 @@ public:
 
     //!     CONSTRUCTORS
     Song();
-    Song(const char* title, int durationSec, int artistID,int featuresSize, const char** artistFeatures, long long streams, const Date& dateParam);
-    Song(const char* title);
-    Song(const Song& other_song);
+    Song(const std::string& title, int durationSec, int artistID, const std::vector<std::string>& artistFeatures, long long streams, const Date& dateParam);
+    Song(const std::string& title);
+    // Song(const Song& other_song);
 
     //!     OVERWRITTING OPERATORS
 
-    Song& operator=(const Song& other_song);
+    // Song& operator=(const Song& other_song);
 
     
     Song& operator++(); //? ++ song
@@ -46,13 +49,13 @@ public:
     bool operator<(const Song& other_song) const;
     bool operator>=(const Song& other_song) const;
     
-    const char* operator[](int index) const;
+    const std::string& operator[](int index) const;
 
     friend std::istream& operator>>(std::istream& in, Song& song);
     friend std::ostream& operator<<(std::ostream& os, const Song& song);
     
     //!     GETTERS
-    const char* getTitle() const {
+    const std::string& getTitle() const {
         return this->title;
     }
 
@@ -72,25 +75,25 @@ public:
         return this->streams;
     }
 
-    char** getFeatures() const {
+    const std::vector<std::string>& getFeatures() const {
         return this->artistsFeatures;
     }
 
     int getFeaturesNum() const {
-        return this->featuresSize;
+        return this->artistsFeatures.size();
     }
 
     //!     SETTERS
 
-    void addFeature(const char* featureName);
+    void addFeature(const std::string& featureName);
     void setArtistID(int id) { this->artistID = id;};
-    void setTitle(const char* song_title);
+    void setTitle(const std::string& song_title);
 
     //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
     void simulatePlayItem() override;
     long long calculateTotalStreams() const override;
 
     //!     DESTRUCTOR
-    ~Song();
+    // ~Song();
 
 };

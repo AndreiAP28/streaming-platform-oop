@@ -2,7 +2,7 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
-
+#include <stdexcept>    
 
 // #include "classes.h"
 
@@ -17,111 +17,86 @@ using namespace std;
 int Song::counter = 3000;
 //!-------------------------CONSTRUCTORS--------------------------------
 Song::Song():
- SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr) ,streams(0), releaseDate() {
+ SONG_ID(counter++), durationSec(0), artistID(0), streams(0), releaseDate() {
     // cout<<"CONSTRUCTORUL SONG DEFAULT CREAT"<<endl;
     // cout << "Song()" << endl;
-    this->title = new char[4];
-    strcpy(this->title, "N/A");
-
-    
 }
 
-Song::Song(const char* title, int durationSec, int artistID, int featuresSize,const char** artistsFeatures, long long streams, const Date& dateParam) 
-: SONG_ID(counter++), durationSec(durationSec), artistID(artistID), featuresSize(featuresSize), streams(streams), releaseDate(dateParam) {
+Song::Song(const string& title, int durationSec, int artistID, const vector<string>& artistsFeatures, long long streams, const Date& dateParam) 
+: SONG_ID(counter++), title(title), durationSec(durationSec), artistID(artistID), streams(streams), releaseDate(dateParam) {
     // cout << "CONSTRUCTORUL SONG CU TOTI PARAM CREAT" << endl;
     // cout << "Song()" << endl;
-
-    this->title = new char[strlen(title) + 1];
-    strcpy(this->title, title);
-
-    if (featuresSize > 0 && artistsFeatures != nullptr) {
-        this->artistsFeatures = new char*[featuresSize];
-
-        for ( int i = 0; i < featuresSize; i ++) {
-            this->artistsFeatures[i] = new char[strlen(artistsFeatures[i]) + 1];
-            strcpy(this->artistsFeatures[i], artistsFeatures[i]);
-        }
-    }  else {
-        this->featuresSize = 0;
-        this->artistsFeatures = nullptr;
-    }
-
-
 }
 
-Song::Song(const char* title)
-:SONG_ID(counter++), durationSec(0), artistID(0), featuresSize(0), artistsFeatures(nullptr), streams(0), releaseDate() {
+Song::Song(const string& title)
+:SONG_ID(counter++),title(title), durationSec(0), artistID(0), streams(0), releaseDate() {
     // cout << "CONSTRUCTOR SONG CU TITLU CREAT" << endl;
     // cout << "Song()" << endl;
-
-
-    this->title = new char[strlen(title) + 1];
-    strcpy(this->title, title);
 }
 
-Song::Song(const Song& other_song)
-: SONG_ID(other_song.SONG_ID), durationSec(other_song.durationSec), artistID(other_song.artistID), streams(other_song.streams), releaseDate(other_song.releaseDate) {
-    // cout << "CONSTRUCTOR SONG DE COPIERE " << endl;
+// Song::Song(const Song& other_song)
+// : SONG_ID(other_song.SONG_ID), durationSec(other_song.durationSec), artistID(other_song.artistID), streams(other_song.streams), releaseDate(other_song.releaseDate) {
+//     // cout << "CONSTRUCTOR SONG DE COPIERE " << endl;
 
-    this->title = new char[strlen(other_song.title) + 1];
-    strcpy(this->title, other_song.title);
+//     this->title = new char[strlen(other_song.title) + 1];
+//     strcpy(this->title, other_song.title);
 
 
-    if (other_song.featuresSize > 0 && other_song.artistsFeatures != nullptr) {
-        this->artistsFeatures = new char*[other_song.featuresSize];
-        this->featuresSize = other_song.featuresSize;
+//     if (other_song.artistsFeatures.size() > 0 && other_song.artistsFeatures != nullptr) {
+//         this->artistsFeatures = new char*[other_song.artistsFeatures.size()];
+//         this->artistsFeatures.size() = other_song.artistsFeatures.size();
 
-        for ( int i = 0; i < other_song.featuresSize; i ++ ) {
-            this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
-            strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
-        }
-    } else {
-        this->artistsFeatures = nullptr;
-        this->featuresSize = 0;
-    }
-}
+//         for ( int i = 0; i < other_song.artistsFeatures.size(); i ++ ) {
+//             this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
+//             strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
+//         }
+//     } else {
+//         this->artistsFeatures = nullptr;
+//         this->artistsFeatures.size() = 0;
+//     }
+// }
 
 
 //!------------------------------OVERWRITTING OPERATORS-------------------
-Song& Song::operator=(const Song& other_song) {
-    if(this == &other_song) return *this;
+// Song& Song::operator=(const Song& other_song) {
+//     if(this == &other_song) return *this;
 
 
-    if(this->title != nullptr) {
-        delete[] title;
-        title = nullptr;
-    }    
+//     if(this->title != nullptr) {
+//         delete[] title;
+//         title = nullptr;
+//     }    
 
-    title = new char[ strlen(other_song.title) + 1];
-    strcpy(title, other_song.title);
+//     title = new char[ strlen(other_song.title) + 1];
+//     strcpy(title, other_song.title);
 
-    if(this->artistsFeatures != nullptr) {
-       for ( int i = 0; i < this->featuresSize; i ++) {
-            delete[] this->artistsFeatures[i];
-       }
+//     if(this->artistsFeatures != nullptr) {
+//        for ( int i = 0; i < this->artistsFeatures.size(); i ++) {
+//             delete[] this->artistsFeatures[i];
+//        }
        
-        delete[] this->artistsFeatures;
-        this->artistsFeatures = nullptr;
-        this->featuresSize = 0;
-    }
+//         delete[] this->artistsFeatures;
+//         this->artistsFeatures = nullptr;
+//         this->artistsFeatures.size() = 0;
+//     }
 
 
-    if (other_song.featuresSize > 0 && other_song.artistsFeatures != nullptr) {
-        artistsFeatures = new char*[other_song.featuresSize];
-        this->featuresSize = other_song.featuresSize;
-        for(int i = 0; i < other_song.featuresSize; i ++) {
-            this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
-            strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
-        }
-    } 
+//     if (other_song.artistsFeatures.size() > 0 && other_song.artistsFeatures != nullptr) {
+//         artistsFeatures = new char*[other_song.artistsFeatures.size()];
+//         this->artistsFeatures.size() = other_song.artistsFeatures.size();
+//         for(int i = 0; i < other_song.artistsFeatures.size(); i ++) {
+//             this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
+//             strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
+//         }
+//     } 
 
-    durationSec = other_song.durationSec;
-    artistID = other_song.artistID;
-    streams = other_song.streams;
-    releaseDate = other_song.releaseDate;
+//     durationSec = other_song.durationSec;
+//     artistID = other_song.artistID;
+//     streams = other_song.streams;
+//     releaseDate = other_song.releaseDate;
 
-    return *this;
-}
+//     return *this;
+// }
 
 Song& Song::operator++() {
     this->streams ++;
@@ -197,7 +172,7 @@ Song& Song::operator-=(int remove_streams_number) {
 }
 
 bool Song::operator==(const Song& other_song) const {
-    return !strcmp(this->title, other_song.title); 
+    return this->title == other_song.title; 
 }
 
 bool Song:: operator>(const Song& other_song) const {
@@ -216,15 +191,14 @@ bool Song::operator>=(const Song& other_song) const {
     return !(*this < other_song);
 }
 
-const char* Song::operator[](int index) const {
-    if (this->artistsFeatures == nullptr) {
+const string& Song::operator[](int index) const {
+    if (this->artistsFeatures.empty()) {
         cout << "There are not features on this song!\n";
-        return "N/A";
+        throw out_of_range("Error: There are no features on this song!");
     }
 
-    if (index < 0 || index >= this->featuresSize) {
-        cout << "Error: There are " << this->featuresSize << "! Please introduce a number between 0 and " << (this->featuresSize - 1) << "." << endl;
-        return "N/A";
+    if (index < 0 || index >= static_cast<int>(this->artistsFeatures.size())) {
+        throw out_of_range("Error: Index out of range!");
     }
 
     return this->artistsFeatures[index];
@@ -232,21 +206,12 @@ const char* Song::operator[](int index) const {
 
 //! VEZI DACA POTI LASA ASA FARA SA CITESTI DIN IN>>
 istream& operator>>(istream& in, Song& song) {
-    if ( song.artistsFeatures != nullptr ) {
-        for (int i = 0; i < song.featuresSize; i ++ ) {
-            delete[] song.artistsFeatures[i];
-        }
+    song.artistsFeatures.clear();
 
-        delete[] song.artistsFeatures;
-        song.artistsFeatures = nullptr;
-    } 
-    
-    song.featuresSize = 0;
     char userChoice = get_yesno_input_validation(" <--- There are features on this song (y/n): ");
     while ( userChoice == 'y' || userChoice == 'Y') {
 
-        char tempFeatureName[256];
-        get_name_input_validation(" <--- Enter the name of the song's feature: ", tempFeatureName, 256);
+        string tempFeatureName = get_name_input_validation(" <--- Enter the name of the song's feature: ");
         song.addFeature(tempFeatureName);
 
         userChoice = get_yesno_input_validation( " <--- There are more features to be added? (y/n): ");
@@ -265,11 +230,11 @@ ostream& operator<<(ostream& os,const Song& song) {
     
     os << "|  ID: [" << song.artistID << "]  TITLE: " << song.title << "\n";
     
-    if (song.featuresSize > 0 && song.artistsFeatures != nullptr) {
+    if (!song.artistsFeatures.empty()) {
         os << "|  FEATURING: ";
-        for (int i = 0; i < song.featuresSize; i++) {
+        for (int i = 0; i < static_cast<int>(song.artistsFeatures.size()); i++) {
             os << song.artistsFeatures[i];
-            if (i != song.featuresSize - 1) {
+            if (i != static_cast<int>(song.artistsFeatures.size()) - 1) {
                 os << ", ";
             }
         }
@@ -288,38 +253,16 @@ ostream& operator<<(ostream& os,const Song& song) {
 
 
 //!------------------------SETTERS----------------------------------------
-void Song::addFeature(const char* featureName) {
-    if (featureName == nullptr) return;
+void Song::addFeature(const string& featureName) {
+    if (featureName.empty()) return;
 
-    char** tempFeatures = new char*[this->featuresSize + 1];
-
-    if(this->artistsFeatures != nullptr){
-        for ( int i = 0; i < this->featuresSize; i ++) {
-            tempFeatures[i] = this->artistsFeatures[i];
-        }
-    }
-    tempFeatures[this->featuresSize] = new char[strlen(featureName) + 1];
-    strcpy(tempFeatures[this->featuresSize], featureName);
-    
-    if(this->artistsFeatures != nullptr) {
-        delete[] this->artistsFeatures;
-    }
-
-    this->artistsFeatures = tempFeatures;
-    this->featuresSize ++;
-
+    this->artistsFeatures.push_back(featureName);
     // cout<< "ADAUGAT CU SUCCES " << featureName << endl;  
 
 }
 
-void Song::setTitle(const char* new_title) {
-    if(this->title != nullptr) {
-        delete[] this->title;
-        this->title = nullptr;
-    }
-
-    this->title = new char[strlen(new_title) + 1];
-    strcpy(this->title, new_title);
+void Song::setTitle(const string& new_title) {
+   this->title = new_title;
 }
 
 //!------------------ INHERITED FUNCTIONS FROM ABSTRACT CLAS PLAYABLEITEM
@@ -340,24 +283,24 @@ long long Song::calculateTotalStreams() const {
 }
 
 //!-------------------------DESTRUCTOR------------------------------------
-Song::~Song() {
-    // cout << "DESTRUCTOR SONG A AVUT LOC!!" << endl;
-    // cout << "~Song()" << endl;
+// Song::~Song() {
+//     // cout << "DESTRUCTOR SONG A AVUT LOC!!" << endl;
+//     // cout << "~Song()" << endl;
 
-    if(this->title != nullptr) { 
-        delete[] title;
-        title = nullptr;
-    }
+//     if(this->title != nullptr) { 
+//         delete[] title;
+//         title = nullptr;
+//     }
 
-    if (this->artistsFeatures != nullptr) {
-        for ( int i = 0; i < this->featuresSize; i ++ ){
-            delete[] artistsFeatures[i];
-        }
+//     if (this->artistsFeatures != nullptr) {
+//         for ( int i = 0; i < this->artistsFeatures.size(); i ++ ){
+//             delete[] artistsFeatures[i];
+//         }
 
-        delete[] artistsFeatures;
-        artistsFeatures = nullptr;
-    }
+//         delete[] artistsFeatures;
+//         artistsFeatures = nullptr;
+//     }
 
-}
+// }
 
 

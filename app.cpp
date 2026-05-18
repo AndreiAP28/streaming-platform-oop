@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cctype>
+#include <algorithm>
 
 // #include "classes.h"
 
@@ -30,25 +31,21 @@ StreamingPlatformApp::StreamingPlatformApp()
     }
 }
 
-bool StreamingPlatformApp::duplicate_name_ignoreCase(const char* name1, const char* name2) {
-    if (name1 == nullptr || name2 == nullptr) {
+bool StreamingPlatformApp::duplicate_name_ignoreCase(const string& name1, const string& name2) {
+    if (name1.empty() || name2.empty()) {
         return false;
     }
 
-    if (strlen(name1) != strlen(name2)) {
+    if (name1.size() != name2.size()) {
         return false;
     }
 
-    int i = 0;
-    while(name1[i] != '\0') { 
-        if (tolower(name1[i]) != tolower(name2[i])) {
-            return false;
-        }
-        i ++;
-    }
-
-    return true;
     
+    return equal(name1.begin(), name1.end(), name2.begin(), name2.end(),
+        [](char a, char b) {
+            return tolower(a) == tolower(b);
+        }
+    );
 }
 
 int StreamingPlatformApp::find_artist_index_inDB_byID(int chosenID_by_user) const {
@@ -74,7 +71,7 @@ int StreamingPlatformApp::find_song_index_inDB_byID(int chosenID_by_user) const 
 int StreamingPlatformApp::find_playlist_index_inDB_byID(int chosenID_by_user) const {
     for (int i = 0; i < this->playlists_counter; i ++ ){ 
         if (this->playlists_database[i]->getPlaylistID() == chosenID_by_user) {
-            if (!strcmp(this->playlists_database[i]->getOwnerUsername(), this->current_user->getUsername())) {
+            if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
                 return i;
             }
         }
@@ -127,8 +124,7 @@ void StreamingPlatformApp::addinDB() {
 }
 
 void StreamingPlatformApp::AddNewArtistinDB() {
-    char input_artistName[256];
-    get_name_input_validation(" <--- Enter artist name: ",input_artistName, 256);
+    string input_artistName = get_name_input_validation(" <--- Enter artist name: ");
 
     bool already_exist = false;
     for (int i = 0; i < this->artists_counter && !already_exist; i ++ ){
@@ -176,8 +172,7 @@ void StreamingPlatformApp::AddNewSonginDB() {
     }
 
  
-    char input_artistName[256];
-    get_name_input_validation("\n [?] Enter the name of the Artist for the new song: ", input_artistName, 256);
+    string input_artistName = get_name_input_validation("\n [?] Enter the name of the Artist for the new song: ");
 
     int artistIndex = -1;
     int artistID = -1;
@@ -195,8 +190,7 @@ void StreamingPlatformApp::AddNewSonginDB() {
         return;
     }
     
-    char input_songTitle[256];
-    get_name_input_validation(" <--- Enter song name: ", input_songTitle, 256);
+    string input_songTitle = get_name_input_validation(" <--- Enter song name: ");
     
     bool already_exist = false;
     for (int i = 0; i < this->songs_counter && !already_exist; i ++){
@@ -299,8 +293,7 @@ void StreamingPlatformApp::exploreLibrary() {
 void StreamingPlatformApp::CreatePlaylist() {
     cout << "\n~~~~~~~~~~~~~~~~~~~~ CREATE NEW PLAYLIST ~~~~~~~~~~~~~~~~~~~~\n";
     
-    char temp_playlistName[256];
-    get_name_input_validation(" <--- Enter a name for your new playlist: ", temp_playlistName, 256);
+    string temp_playlistName = get_name_input_validation(" <--- Enter a name for your new playlist: ");
 
     Playlist* newPlaylist = new Playlist();
     newPlaylist->setName(temp_playlistName);
@@ -340,7 +333,7 @@ void StreamingPlatformApp::ManagePlaylist() {
 
     bool user_has_playlists = false;
     for (int i = 0; i < playlists_counter; i ++ ){
-        if (!strcmp(this->playlists_database[i]->getOwnerUsername(), this->current_user->getUsername())) {
+        if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
             user_has_playlists = true;
         }
     }
@@ -352,7 +345,7 @@ void StreamingPlatformApp::ManagePlaylist() {
 
     cout << "\n ~~~~~~~~~~~~~~~~~~~~~~~~~ MANAGE PLAYLISTS ~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     for ( int i = 0; i < playlists_counter; i ++) {
-        if(!strcmp(playlists_database[i]->getOwnerUsername(), current_user->getUsername())) {
+        if(playlists_database[i]->getOwnerUsername() == current_user->getUsername()) {
             cout << "[ ID: " << playlists_database[i]->getPlaylistID() << "] " << playlists_database[i]->getName() << "\n";
         }
     }
@@ -469,7 +462,7 @@ void StreamingPlatformApp::ViewPlaylists() {
     cout << "\n~~~~~~~~~~~~~~~ " << this->current_user->getUsername() << " PLAYLISTS ~~~~~~~~~~~~~~~\n";
 
     for (int i = 0; i < playlists_counter; i ++) {
-        if (!strcmp(this->playlists_database[i]->getOwnerUsername(), this->current_user->getUsername())) {
+        if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
             cout << "   <- [ ID: " << playlists_database[i]->getPlaylistID() << "] - " << playlists_database[i]->getName() << " (" << playlists_database[i]->getSongsSize() << " tracks)\n"; 
         }
     }
@@ -559,13 +552,13 @@ void StreamingPlatformApp::ViewSongsDB() {
     for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
         int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
 
-        char current_artistName[256];
+        string current_artistName;
         int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
 
         if (artistIndex_inDB != -1) {
-            strcpy(current_artistName, artists_database[artistIndex_inDB]->getName());
+            current_artistName = artists_database[artistIndex_inDB]->getName();
         } else {
-            strcpy(current_artistName, "Unknown");
+            current_artistName = "Unknown";
         }
 
         cout << " <- ID: [" <<songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
@@ -711,13 +704,13 @@ void StreamingPlatformApp::ManageLikedSongs() {
                 for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
                     int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
 
-                    char current_artistName[256];
+                    string current_artistName;
                     int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
 
                     if (artistIndex_inDB != -1) {
-                        strcpy(current_artistName, artists_database[artistIndex_inDB]->getName());
+                        current_artistName = artists_database[artistIndex_inDB]->getName();
                     } else {
-                        strcpy(current_artistName, "Unknown");
+                        current_artistName = "Unknown";
                     }
 
                     cout << " <- ID: [" << songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
@@ -827,20 +820,19 @@ void StreamingPlatformApp::ManageSubscriptions() {
             int user_choice = get_int_input_validation("Choose an action: ");
             switch(user_choice) {
                 case 1: {
-                    char new_member[256];
-                    get_name_input_validation("Enter new member's name: ", new_member, 256);
+                    string new_member = get_name_input_validation("Enter new member's name: ");
                     family_user->addMember(new_member);
                     show_menu = true;
                     break;
                 }
 
-                case 2:
+                case 2: {
                     //! CONTINUE HERE
-                    char removed_member[256];
-                    get_name_input_validation("Enter the member's name you want to remove: ", removed_member, 256);
+                    string removed_member = get_name_input_validation("Enter the member's name you want to remove: ");
                     family_user->removeMember(removed_member);
                     show_menu = true;
                     break;
+                }
 
                 case 0:
                     cout << "\nReturning to Main Menu...\n";
@@ -886,32 +878,27 @@ void StreamingPlatformApp::ManageSubscriptions() {
 
     int db_index = find_user_index_inDB();
     int saved_id = current_user->getUserID();
-    char saved_name[256];
-    char saved_password[256];
-    strcpy(saved_name, current_user->getUsername());
-    strcpy(saved_password, current_user->getPassword());
-    int saved_songs_num = current_user->getSongsArrSize();
-
+    string saved_name = current_user->getUsername();
+    string saved_password = current_user->getPassword();
 
     User* upgraded_subs_user = nullptr;
     Date today;
     // Here the normal User it will be replaced with the class for PremiumUser/FamilyPremiumUser so it will activate the polymorphism
     switch(user_choice) {
         case 1:
-            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, STANDARD_MONTHLY, today);            
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), STANDARD_MONTHLY, today);            
             break;
         case 2:
-            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, STUDENT_PLAN, today);            
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), STUDENT_PLAN, today);            
             break;
         case 3:
-            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, ANNUAL_DISCOUNT, today);            
+            upgraded_subs_user = new PremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), ANNUAL_DISCOUNT, today);            
             break;
         case 4: {
-            upgraded_subs_user = new FamilyPremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), saved_songs_num, today);            
+            upgraded_subs_user = new FamilyPremiumUser(saved_id, saved_name, saved_password, current_user->getLikedSongs(), today);            
             
             FamilyPremiumUser* family_plan_user = dynamic_cast<FamilyPremiumUser*>(upgraded_subs_user);
-            char currentMemberName[256];
-            get_name_input_validation("Enter your name that will be display as member: ", currentMemberName, 256);
+            string currentMemberName = get_name_input_validation("Enter your name that will be display as member: ");
             family_plan_user->addMember(currentMemberName);
             break;
         }
@@ -1000,8 +987,7 @@ void StreamingPlatformApp::connectingMenu() {
 void StreamingPlatformApp::signUp() {
     cout << "\n~~~~~~~~~~~~ CREATE A NEW ACCOUNT ~~~~~~~~~~~~\n";
 
-    char input_username[256];
-    get_name_input_validation(" [?] Enter a username: ", input_username, 256);
+    string input_username = get_name_input_validation(" [?] Enter a username: ");
 
     bool already_exist = false;
     for (int i = 0;i < this->users_counter && !already_exist; i ++) {
@@ -1015,8 +1001,7 @@ void StreamingPlatformApp::signUp() {
         return;
     }
 
-    char input_password[256];
-    get_name_input_validation(" [?] Enter a password: ", input_password, 256);
+    string input_password = get_name_input_validation(" [?] Enter a password: ");
     //! snippet for subscription type attribute if i add it
 
     User* new_user = new User();
@@ -1055,8 +1040,7 @@ void StreamingPlatformApp::login() {
         return;
     }
 
-    char input_username[256];
-    get_name_input_validation(" [?] Enter your username: ", input_username, 256);
+    string input_username = get_name_input_validation(" [?] Enter your username: ");
 
     bool user_found = false;
     int current_user_index = -1;
@@ -1072,9 +1056,8 @@ void StreamingPlatformApp::login() {
         return;
     }
 
-    char input_password[256];
-    get_name_input_validation(" [?] Enter your password: ", input_password, 256);
-    if (!strcmp(input_password, (*this->users_database[current_user_index]).getPassword())) {
+    string input_password = get_name_input_validation(" [?] Enter your password: ");
+    if (input_password == (*this->users_database[current_user_index]).getPassword()) {
         this->current_user = this->users_database[current_user_index];
         cout << "\n[SUCCESS] Logged in successfully! Welcome back, " << this->current_user->getUsername() << "!\n";
     } else {
@@ -1146,16 +1129,16 @@ void StreamingPlatformApp::preloadedData() {
     this->artists_counter = 10;
     this->artists_database = new Artist*[10];
 
-    artists_database[0] = new Artist("Travis Scott", 60000000, 0, nullptr, true);
-    artists_database[1] = new Artist("Lil Uzi Vert", 35000000, 0, nullptr, true);
-    artists_database[2] = new Artist("A$AP Rocky", 30000000, 0, nullptr, true);
-    artists_database[3] = new Artist("Drake", 80000000, 0, nullptr, true);
-    artists_database[4] = new Artist("Kendrick Lamar", 55000000, 0, nullptr, true);
-    artists_database[5] = new Artist("The Weeknd", 100000000, 0, nullptr, true);
-    artists_database[6] = new Artist("Playboi Carti", 25000000, 0, nullptr, true);
-    artists_database[7] = new Artist("Future", 45000000, 0, nullptr, true);
-    artists_database[8] = new Artist("Tyler, The Creator", 32000000, 0, nullptr, true);
-    artists_database[9] = new Artist("Metro Boomin", 50000000, 0, nullptr, true);
+    artists_database[0] = new Artist("Travis Scott", 60000000, {}, true);
+    artists_database[1] = new Artist("Lil Uzi Vert", 35000000, {}, true);
+    artists_database[2] = new Artist("A$AP Rocky", 30000000, {}, true);
+    artists_database[3] = new Artist("Drake", 80000000, {},true);
+    artists_database[4] = new Artist("Kendrick Lamar", 55000000, {},true);
+    artists_database[5] = new Artist("The Weeknd", 100000000, {},true);
+    artists_database[6] = new Artist("Playboi Carti", 25000000, {},true);
+    artists_database[7] = new Artist("Future", 45000000, {},true);
+    artists_database[8] = new Artist("Tyler, The Creator", 32000000, {},true);
+    artists_database[9] = new Artist("Metro Boomin", 50000000, {},true);
 
     this->songs_counter = 50;
     this->songs_database = new Song*[50];
@@ -1187,7 +1170,7 @@ void StreamingPlatformApp::preloadedData() {
             int random_month = 1 + (rand() % 12);
             int random_day = 1 + (rand() % 28); // safety for feb
 
-            songs_database[s_idx] = new Song(all_songs[a_idx][i], random_duration, current_artist_id, 0, nullptr, random_streams, Date(random_day, random_month, random_year));
+            songs_database[s_idx] = new Song(all_songs[a_idx][i], random_duration, current_artist_id, {}, random_streams, Date(random_day, random_month, random_year));
             
             artists_database[a_idx]->addTopSong(all_songs[a_idx][i]);
             

@@ -1,6 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <vector>
+
+
+
 // #include "song.h"
 
 class Song;
@@ -10,24 +15,23 @@ protected:
 // displayProfile function for polimorphism
     static int counter;
     const int USER_ID;
-    char* username;
-    char* password;
-    Song** liked_songs;
-    int likedSongs_num;
+    std::string username;
+    std::string password;
+    std::vector<Song*> liked_songs;
 
 public:
     //!------------------------------CONSTRUCTORS--------------------------
     User();
-    User(const char* username, const char* password, Song** liked_songs, int likedSongs_num);
-    User(const char* username, const char* password);
+    User(const std::string& username, const std::string& password, const std::vector<Song*>& liked_songs);
+    User(const std::string& username, const std::string& password);
 
     //used for inheritance 
-    User(int old_id, const char* username, const char* password, Song** liked_songs, int likedSongs_num);
+    User(int old_id, const std::string& username, const std::string& password, const std::vector<Song*>& liked_songs);
 
-    User(const User& other_user);
+    // User(const User& other_user);
 
     //!--------------------------- OVERWRITTING OPERATORS--------------------
-    User& operator=(const User& other_user);
+    // User& operator=(const User& other_user);
     User& operator+=(Song& new_song);
     User& operator-=(int removed_index);
 
@@ -40,19 +44,19 @@ public:
     friend std::istream& operator>>(std::istream& in, User& user);
     friend std::ostream& operator<<(std::ostream& os, const User& user);
     //!--------------------------------GETTERS--------------------------
-    const char* getUsername() const { return username;}
-    const char* getPassword() const { return password;}
+    const std::string& getUsername() const { return username;}
+    const std::string& getPassword() const { return password;}
     const int getUserID() const {return USER_ID;}
-    Song** getLikedSongs() const {return liked_songs;}
-    int getSongsArrSize() const{return likedSongs_num;}
+    const std::vector<Song*>& getLikedSongs() const {return liked_songs;}
+    int getSongsArrSize() const{return liked_songs.size();}
     //!--------------------------------SETTERS--------------------------
     
-    void setUsername(const char* new_username);
-    void setPassword(const char* new_password);
+    void setUsername(const std::string& new_username);
+    void setPassword(const std::string& new_password);
     void add_likedSong(Song& new_song);
     //!--------------------------------------------------------------------
     virtual void displayProfile() const;
     //!--------------------------------DESTRUCTORS--------------------------
-    virtual ~User();
+    virtual ~User() = default;
 
 };
