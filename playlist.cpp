@@ -1,7 +1,7 @@
 #include <iostream>
-#include <cstring>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 #include <stdexcept>
 
 // #include "classes.h"
@@ -207,13 +207,25 @@ void Playlist::addSong(Song& new_song) {
     this->songs.push_back(&new_song);
 }
 
-void Playlist::removeSong(int removed_index) { 
-    if (this->songs.empty()  || removed_index < 0 || removed_index >= static_cast<int>(this->songs.size())) {
+void Playlist::removeSong(int removed_songID) { 
+    if (this->songs.empty()) {
         return;
     }
-
-    this->totalDurationSec -= this->songs[removed_index]->getDuration();
-    this->songs.erase(this->songs.begin() + removed_index);
+    
+    size_t before_removing_size = this->songs.size();
+    this->songs.erase(
+        remove_if(songs.begin(), songs.end(),
+            [removed_songID](const Song* curr_song){
+                return curr_song->getSongID() == removed_songID;
+            }
+        ),
+        songs.end()
+    );
+    if (this->songs.size() < before_removing_size) {
+        cout << "[SUCCESS] Song removed from playlist!\n";
+    } else {
+        cout << "[!] Invalid song selection.\n";
+    }
 }
 
 void Playlist::setName(const string& new_name) {

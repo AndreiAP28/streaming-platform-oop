@@ -1,7 +1,5 @@
 #include <iostream>
-// #include <cctype>
-
-// #include "classes.h" 
+#include <algorithm>
 
 #include "utils.h"
 #include "user.h"
@@ -85,14 +83,26 @@ User& User::operator+=(Song& new_song) {
     return *this;
 }
 
-User& User::operator-=(int removed_index) {
-    if (this->liked_songs.empty() || removed_index < 0 || removed_index >= static_cast<int>(this->liked_songs.size())) {
+User& User::operator-=(int removed_songID) {
+    if (this->liked_songs.empty() ) {
         return *this;
     }
 
-    this->liked_songs.erase(this->liked_songs.begin() + removed_index);
+    size_t before_removing_size = this->liked_songs.size();
+    this->liked_songs.erase(
+        remove_if(this->liked_songs.begin(), this->liked_songs.end(),
+            [removed_songID](const Song* song){
+                return song->getSongID() == removed_songID;
+            }),
+        this->liked_songs.end()
+    );
 
-    cout << "[SUCCES] You have removed the selected song from liked.\n";
+    if (this->liked_songs.size() < before_removing_size) {
+        cout << "[SUCCES] You have removed the selected song from liked.\n";
+    } else {
+        cout << " <--- [!] Invalid ID. Going back to menu!\n";
+        
+    }
 
     return *this;
 }

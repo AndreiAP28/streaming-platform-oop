@@ -1,10 +1,8 @@
 #include <iostream>
-#include <cstring>
 #include <cstdlib>
 #include <cctype>
 #include <algorithm>
 
-// #include "classes.h"
 
 #include "utils.h"
 #include "app.h"
@@ -22,13 +20,7 @@ using namespace std;
 
 const int StreamingPlatformApp::MAX_QUEUE_SIZE = 50;
 
-StreamingPlatformApp::StreamingPlatformApp() 
-: artists_database(nullptr), artists_counter(0), playlists_database(nullptr), playlists_counter(0), songs_database(nullptr), songs_counter(0), users_database(nullptr), users_counter(0), current_user(nullptr), queue_counter(0) {
-    this->music_queue = new playableItem*[MAX_QUEUE_SIZE];
-
-    for (int i = 0;i < MAX_QUEUE_SIZE; i ++) {
-        this->music_queue[i] = nullptr; 
-    }
+StreamingPlatformApp::StreamingPlatformApp() : current_user(nullptr) {
 }
 
 bool StreamingPlatformApp::duplicate_name_ignoreCase(const string& name1, const string& name2) {
@@ -48,48 +40,47 @@ bool StreamingPlatformApp::duplicate_name_ignoreCase(const string& name1, const 
     );
 }
 
-int StreamingPlatformApp::find_artist_index_inDB_byID(int chosenID_by_user) const {
-    for (int i = 0; i < this->artists_counter; i ++) {
-        if (artists_database[i]->getArtistID() == chosenID_by_user) {
-            return i;
-        }
-    }
+// int StreamingPlatformApp::find_artist_index_inDB_byID(int chosenID_by_user) const {
+//     for (int i = 0; i < this->artists_counter; i ++) {
+//         if (artists_database[i]->getArtistID() == chosenID_by_user) {
+//             return i;
+//         }
+//     }
+//
+//     return -1;
+// }
 
-    return -1;
-}
+// int StreamingPlatformApp::find_song_index_inDB_byID(int chosenID_by_user) const {
+//     for (int i = 0; i < this->songs_counter; i ++) {
+//         if (songs_database[i]->getSongID() == chosenID_by_user) {
+//             return i;
+//         }
+//     }
+//
+//     return -1;
+// }
 
-int StreamingPlatformApp::find_song_index_inDB_byID(int chosenID_by_user) const {
-    for (int i = 0; i < this->songs_counter; i ++) {
-        if (songs_database[i]->getSongID() == chosenID_by_user) {
-            return i;
-        }
-    }
+// int StreamingPlatformApp::find_playlist_index_inDB_byID(int chosenID_by_user) const {
+//     for (int i = 0; i < this->playlists_counter; i ++ ){ 
+//         if (this->playlists_database[i]->getPlaylistID() == chosenID_by_user) {
+//             if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
+//                 return i;
+//             }
+//         }
+//     }
+//
+//     return -1;
+// }
 
-    return -1;
-}
-
-int StreamingPlatformApp::find_playlist_index_inDB_byID(int chosenID_by_user) const {
-    for (int i = 0; i < this->playlists_counter; i ++ ){ 
-        if (this->playlists_database[i]->getPlaylistID() == chosenID_by_user) {
-            if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
-                return i;
-            }
-        }
-    }
-
-    return -1;
-}
-
-int StreamingPlatformApp::find_user_index_inDB() const {
-    for (int i = 0; i < this->users_counter; i ++) {
-        if (users_database[i] == current_user) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
+// int StreamingPlatformApp::find_user_index_inDB() const {
+//     for (int i = 0; i < this->users_counter; i ++) {
+//         if (users_database[i] == current_user) {
+//             return i;
+//         }
+//     }
+//
+//     return -1;
+// }
 
 //!---------------- ADD IN DB ---------------------------------
 void StreamingPlatformApp::addinDB() {
@@ -126,14 +117,12 @@ void StreamingPlatformApp::addinDB() {
 void StreamingPlatformApp::AddNewArtistinDB() {
     string input_artistName = get_name_input_validation(" <--- Enter artist name: ");
 
-    bool already_exist = false;
-    for (int i = 0; i < this->artists_counter && !already_exist; i ++ ){
-        if (duplicate_name_ignoreCase((*this->artists_database[i]).getName(), input_artistName)) {
-            already_exist = true;
-        }
-    }
+    bool not_found = all_of(artists_database.begin(), artists_database.end(),
+    [&](const auto& pair) {
+        return !duplicate_name_ignoreCase(pair.second->getName(), input_artistName);
+    });
 
-    if (already_exist) {
+    if (!not_found) {
         cout << "\n[!] Error: An artist named '" << input_artistName << "' already exists!\n";
         return;     
     }
@@ -141,23 +130,7 @@ void StreamingPlatformApp::AddNewArtistinDB() {
     tempNewArtist->setName(input_artistName);
     cin >> *tempNewArtist;
 
-    Artist** tempArtistsDB = new Artist*[this->artists_counter + 1];
-    for ( int i = 0; i < this->artists_counter; i ++ ){ 
-        tempArtistsDB[i] = this->artists_database[i];
-    }
-    tempArtistsDB[this->artists_counter] = tempNewArtist;
-
-    if (this->artists_database != nullptr ) {
-        delete[] this->artists_database;
-        this->artists_database = nullptr;
-    }
-
-    this->artists_database = new Artist*[this->artists_counter ++];
-    for (int i = 0;i < this->artists_counter; i ++) {
-        this->artists_database[i] = tempArtistsDB[i];
-    }
-
-    delete[] tempArtistsDB;
+    artists_database[tempNewArtist->getArtistID()] = tempNewArtist;
 
     //! this->artists_database = tempArtistsDB;
 
@@ -166,39 +139,35 @@ void StreamingPlatformApp::AddNewArtistinDB() {
 
 void StreamingPlatformApp::AddNewSonginDB() {
 
-    if (artists_counter == 0) {
+    if (artists_database.empty()) {
         cout << "\n [!] Error: No artists in database. Add an artist first!\n";
         return;
     }
-
  
     string input_artistName = get_name_input_validation("\n [?] Enter the name of the Artist for the new song: ");
 
-    int artistIndex = -1;
-    int artistID = -1;
-    for (int i = 0; i < artists_counter && artistIndex == -1; i ++) {
-        if (duplicate_name_ignoreCase(artists_database[i]->getName(), input_artistName)) {
-            artistIndex = i;
-            artistID = (artists_database[i])->getArtistID();
-        }
-    }
+    auto artist_it = find_if(artists_database.begin(), artists_database.end(),
+    [&](const auto& pair) {
+        return duplicate_name_ignoreCase(pair.second->getName(), input_artistName);
+    });
     
-
-    if (artistIndex == -1) {
+    
+    if (artist_it == artists_database.end()) {
         cout << " [!] Error: Artist '" << input_artistName << "' not found. \n";
         cout << " [i] Tip: Check spelling or add the artist to the database first.\n";
         return;
     }
     
+    Artist* found_artist = artist_it->second;
+    int artistID = found_artist->getArtistID();
+
     string input_songTitle = get_name_input_validation(" <--- Enter song name: ");
     
-    bool already_exist = false;
-    for (int i = 0; i < this->songs_counter && !already_exist; i ++){
-        if (duplicate_name_ignoreCase(this->songs_database[i]->getTitle(), input_songTitle)
-            && (*this->songs_database)->getSongsArtistID() == artistID) {
-                already_exist = true;
-            }
-    }
+    bool already_exist = any_of(songs_database.begin(), songs_database.end(),
+        [&](const auto& pair){
+            Song* current_song = pair.second;
+            return duplicate_name_ignoreCase(current_song->getTitle(), input_songTitle) && current_song->getSongsArtistID() == artistID;
+        });
      
     if (already_exist) {
         cout << "\n[!] Error: A song with the title '" << input_songTitle << "' already exists!\n";
@@ -210,30 +179,8 @@ void StreamingPlatformApp::AddNewSonginDB() {
     new_song->setArtistID(artistID);
     cin >> *new_song;
 
-    Song** tempSongsDB = new Song*[this->songs_counter + 1];
-    for ( int i = 0;i < this->songs_counter; i ++ ){
-        tempSongsDB[i] = this->songs_database[i];
-        // cout <<"\tempUsersDB---------- SONG ID in TEMP: -> " << tempSongsDB[i]->getSongID() << " NAME: "<< new_song->getTitle() << "-----------\n";
-    }
-
-    tempSongsDB[this->songs_counter] = new_song;
-    // cout <<"\n---------- SONG ID: -> " << new_song->getSongID() << " NAME: "<< new_song->getTitle()<< "-----------\n";
-    if (this->songs_database != nullptr) {
-        delete[] this->songs_database;
-        songs_database = nullptr;
-    }
-
-    this->songs_database = new Song*[++(this->songs_counter)];
-    for (int i = 0;i < songs_counter; i ++ ){
-        this->songs_database[i] = tempSongsDB[i];
-    }
-
-    delete[] tempSongsDB;
-
-    //! this->songs_database = tempSongsDB; 2nd method???
-    //! gen de ce e gresit ca practic dupa ce copiaza toate piesele vechi in temporar + piesa noua, songs_database ia adresa lui temp
-
-    this->artists_database[artistIndex]->addTopSong(new_song->getTitle());
+    songs_database[new_song->getSongID()] = new_song;
+    found_artist->addTopSong(new_song->getTitle());   
 
     cout <<"\nSong '" << new_song->getTitle() << "' added to the Database!\n";
 
@@ -299,25 +246,7 @@ void StreamingPlatformApp::CreatePlaylist() {
     newPlaylist->setName(temp_playlistName);
     newPlaylist->setOwnerUsername(this->current_user->getUsername());
 
-    Playlist** temp_PlaylistDB = new Playlist*[playlists_counter + 1];
-
-    for (int i = 0; i < playlists_counter; i ++) {
-        temp_PlaylistDB[i] = playlists_database[i];
-    }
-
-    temp_PlaylistDB[playlists_counter] = newPlaylist;
-    if ( playlists_database != nullptr) {
-        delete[] playlists_database;
-        playlists_database = nullptr;
-    }
-    //! playlists_database = temp_PlaylistDB;
-    playlists_database = new Playlist*[++playlists_counter];
-    for (int i = 0; i < playlists_counter; i ++) {
-        playlists_database[i] = temp_PlaylistDB[i];
-    }
-
-    delete[] temp_PlaylistDB;
-       
+    this->playlists_database.push_back(newPlaylist);       
 
     cout << " [SUCCESS] Playlist '" << temp_playlistName << "' has been created!\n";
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
@@ -326,27 +255,26 @@ void StreamingPlatformApp::CreatePlaylist() {
 
 void StreamingPlatformApp::ManagePlaylist() {
 
-    if (playlists_counter == 0 ){
+    if (playlists_database.empty()){
         cout <<"\n[!] No playlist exist. Please create one first!\n";
         return;
     }
 
-    bool user_has_playlists = false;
-    for (int i = 0; i < playlists_counter; i ++ ){
-        if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
-            user_has_playlists = true;
-        }
-    }
+   bool user_hasno_playlists = none_of(playlists_database.begin(), playlists_database.end(), 
+        [&](const Playlist* curr_p) {
+            return curr_p->getOwnerUsername() == current_user->getUsername();     
+        }    
+    );
 
-    if (!user_has_playlists) {
+    if (user_hasno_playlists) {
         cout << "\n[!] You haven't created any playlist yet!";
         return;
     }
 
     cout << "\n ~~~~~~~~~~~~~~~~~~~~~~~~~ MANAGE PLAYLISTS ~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    for ( int i = 0; i < playlists_counter; i ++) {
-        if(playlists_database[i]->getOwnerUsername() == current_user->getUsername()) {
-            cout << "[ ID: " << playlists_database[i]->getPlaylistID() << "] " << playlists_database[i]->getName() << "\n";
+    for (const Playlist* curr_p: playlists_database) {
+        if(curr_p->getOwnerUsername() == current_user->getUsername()) {
+            cout << "[ ID: " << curr_p->getPlaylistID() << "] " << curr_p->getName() << "\n";
         }
     }
     cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
@@ -354,16 +282,22 @@ void StreamingPlatformApp::ManagePlaylist() {
 
     int playlistID_input = get_int_input_validation("\n <--- Enter the ID of the playlist you want to manage: ");
 
-    int playlist_index_input = this->find_playlist_index_inDB_byID(playlistID_input);
-    if (playlist_index_input == -1) {
+
+    auto managing_playlist_it = find_if (playlists_database.begin(), playlists_database.end(),
+        [&](const Playlist* curr_p) {
+                return curr_p->getPlaylistID() == playlistID_input && curr_p->getOwnerUsername() == current_user->getUsername();
+        }
+    );
+    if (managing_playlist_it == playlists_database.end()) {
         cout << " [!] Invalid ID or you do not own this playlist!\n";
         return;
     }
 
+    Playlist* managing_playlist = *managing_playlist_it;
     int user_choice = -1;
     while (user_choice != 0) {
         cout << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    cout << "|  MANAGING: " << playlists_database[playlist_index_input]->getName() << "                            |\n";
+    cout << "|  MANAGING: " << managing_playlist->getName() << "                            |\n";
     cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     cout << "|  [1]. Add a Song to Playlist                   |\n";
     cout << "|  [2]. Remove a Song from Playlist              |\n";
@@ -374,71 +308,74 @@ void StreamingPlatformApp::ManagePlaylist() {
 
         switch (user_choice) {
             case 1: {
-                if (songs_counter == 0) {
+                if (songs_database.empty()) {
                     cout << "[!] There are no songs in database!\n";
                     break;
                 }
 
                 cout << "\n ~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~\n";
-                for ( int i = 0; i < songs_counter; i ++ ){
-                    cout << "[" << i + 1 << "] " << songs_database[i]->getTitle() << endl;
+                vector<Song*> sorted_songs;
+                for (const auto& pair : songs_database) {
+                    sorted_songs.push_back(pair.second);
+                }
+
+                sort(sorted_songs.begin(), sorted_songs.end(),
+                    [](Song* first, Song* second) {
+                        return first->getSongID() < second->getSongID();
+                    });
+                
+                for (const Song* current_song: sorted_songs) {
+                    cout << "[ ID: " << current_song->getSongID() << " ] " << current_song->getTitle() << "\n";
                 }
                 cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
-                int song_index_input = get_int_input_validation(" <--- Enter the index of the song you want to add: ");
-                song_index_input --;
-               
-                if ( song_index_input >= 0 && song_index_input < songs_counter) {
-
-                    bool already_exist = false;
-                    int current_playlist_size = playlists_database[playlist_index_input]->getSongsSize();
-
-                    for (int i = 0;i < current_playlist_size && !already_exist; i ++) {
-                        if (songs_database[song_index_input]->getSongID() == (*playlists_database[playlist_index_input])[i].getSongID()){
-                            already_exist = true;
-                        }
-                    }
-
-                    if (already_exist) {
-                        cout << "[!] This song is already in playlist!\n";
-                    } else {
-                        playlists_database[playlist_index_input]->addSong(*songs_database[song_index_input]);
-                        cout << "[SUCCESS] Song added to playlist!\n";
-                    }
+                int songID_input = get_int_input_validation(" <--- Enter the ID of the song you want to add: ");
                 
-                }  else {
+                auto adding_song_it = songs_database.find(songID_input);
+                if (adding_song_it == songs_database.end()) {
                     cout << "[!] Invalid selection!\n";
+                    break;
+                }  
+
+                Song* adding_song = adding_song_it->second;
+                const vector<Song*>& playlist_songs = managing_playlist->getSongs();
+                bool already_exist = any_of(playlist_songs.begin(), playlist_songs.end(),
+                    [&](const Song* curr_song) {
+                        return curr_song->getSongID() == songID_input;
+                    }
+                );
+
+                if (already_exist) {
+                    cout << "[!] This song is already in playlist!\n";
+                } else {
+                    managing_playlist->addSong(*adding_song);
+                    cout << "[SUCCESS] Song added to playlist!\n";
                 }
                 break;
             }
             
             case 2: {
-                int playlist_size = (*playlists_database[playlist_index_input]).getSongsSize();
-                if (playlist_size == 0) {
+                const vector<Song*>& playlist_songs = managing_playlist->getSongs();
+                if (playlist_songs.empty()) {
                     cout <<" [!] This playlist is already empty!\n";
                     break;
                 }
 
                 cout << "\n~~~~~~~~~~~~~~~~ TRACKS IN PLAYLIST ~~~~~~~~~~~~~~~~\n";
-                for ( int i = 0; i < playlist_size;  i ++) {
-                        cout << "[" << i + 1 << "] -> " << (*playlists_database[playlist_index_input])[i].getTitle() << endl;
+                for ( const Song* curr_song: playlist_songs) {
+                        cout << "[" << curr_song->getSongID() << "] -> " << curr_song->getTitle() << endl;
                 }
                 cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
-                int remove_index_input = get_int_input_validation("\n <--- Enter the index of the song that you want to remove: ");
-                remove_index_input --;
+                int removeID_input = get_int_input_validation("\n <--- Enter the ID of the song that you want to remove: ");
 
-                if (remove_index_input >= 0 && remove_index_input < (*playlists_database[playlist_index_input]).getSongsSize()) {
-                    (*playlists_database[playlist_index_input]).removeSong(remove_index_input); 
-                    cout << "[SUCCESS] Song removed from playlist!\n";
-                } else {
-                    cout << "[!] Invalid song selection.\n";
-                }
+                 
+                managing_playlist->removeSong(removeID_input); 
                 break;
             }
 
             case 3:
-                cout << *playlists_database[playlist_index_input];
+                cout << *managing_playlist;
                 break;
 
             case 0: 
@@ -454,55 +391,64 @@ void StreamingPlatformApp::ManagePlaylist() {
 }
 
 void StreamingPlatformApp::ViewPlaylists() {
-    if (playlists_counter == 0) {
+    if (playlists_database.empty()) {
         cout << "[!] There are no playlists registered yet.\n";
         return;
     }
 
+    bool user_has_playlist = false;
     cout << "\n~~~~~~~~~~~~~~~ " << this->current_user->getUsername() << " PLAYLISTS ~~~~~~~~~~~~~~~\n";
-
-    for (int i = 0; i < playlists_counter; i ++) {
-        if (this->playlists_database[i]->getOwnerUsername() == this->current_user->getUsername()) {
-            cout << "   <- [ ID: " << playlists_database[i]->getPlaylistID() << "] - " << playlists_database[i]->getName() << " (" << playlists_database[i]->getSongsSize() << " tracks)\n"; 
+    for (const Playlist* playlist: playlists_database) {
+        if (playlist->getOwnerUsername() == this->current_user->getUsername()) {
+            cout << "   <- [ ID: " << playlist->getPlaylistID() << "] - " << playlist->getName() << " (" << playlist->getSongsSize() << " tracks)\n"; 
+            user_has_playlist = true;
         }
     }
     cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     
+    if (!user_has_playlist) {
+        return;
+    }
     char user_input = get_yesno_input_validation("\n[?] Would you like to view more about a playlist? (y/n): ");
     
     if (user_input == 'y' || user_input == 'Y') {
         int chosenID = get_int_input_validation(" <--- Enter the Playlist ID: ");
         
-        int playlist_index_input = this->find_playlist_index_inDB_byID(chosenID);
-        if (playlist_index_input == -1) {
+        auto chosen_playlist_it = find_if(playlists_database.begin(), playlists_database.end(), 
+            [&](const Playlist* curr_p) {
+                return curr_p->getPlaylistID() == chosenID && curr_p->getOwnerUsername() == current_user->getUsername();
+            });
+        if (chosen_playlist_it == playlists_database.end()) {
             cout << " [!] Invalid ID or you do not own this playlist!\n";
             return;
         }
+
+        Playlist* chosen_playlist = *chosen_playlist_it;
         
-        cout << *playlists_database[playlist_index_input];
-        if ((*playlists_database[playlist_index_input]).getSongsSize()){
-            cout << "Total Songs' Streams in this playlist: " << playlists_database[playlist_index_input]->calculateTotalStreams() << " streams.\n";
+        cout << *chosen_playlist;
+        if (chosen_playlist->getSongsSize()){
+            cout << "Total Songs' Streams in this playlist: " << chosen_playlist->calculateTotalStreams() << " streams.\n";
         }
 
-        int user_choice = get_int_input_validation("\n[1] Play Now  ~  [2] Add to Queue  ~  [0] Go Back: ");
         bool looping = true;
-            while (looping) {
+        while (looping) {
+                int user_choice = get_int_input_validation("\n[1] Play Now  ~  [2] Add to Queue  ~  [0] Go Back: ");
                 switch(user_choice) {
                     case 1: 
-                        playlists_database[playlist_index_input]->simulatePlayItem();
+                        chosen_playlist->simulatePlayItem();
                         looping = false;
                         break;
                     case 2:
-                        if (this->queue_counter < this->MAX_QUEUE_SIZE - 1) {
-                            music_queue[queue_counter ++] = playlists_database[playlist_index_input];
-                            cout << " [SUCCES] Playlist " << playlists_database[playlist_index_input]->getName() << " Added in the queue!\n";
+                        if (music_queue.size() < this->MAX_QUEUE_SIZE) {
+                            music_queue.push_back(chosen_playlist);
+                            cout << " [SUCCES] Playlist " << chosen_playlist->getName() << " Added in the queue!\n";
                         } else {
                             cout << "[!] Queue is already full!\n";
                         }
                         looping = false;
                         break;
                     default:
-                    cout << "\n[!] Invalid choice. Please try again. \n";
+                        cout << "\n[!] Invalid choice. Please try again. \n";
                         
 
                 }
@@ -513,14 +459,24 @@ void StreamingPlatformApp::ViewPlaylists() {
 }
 
 void StreamingPlatformApp::ViewArtistsDB() {
-    if (artists_counter == 0) {
-        cout << "[!] There are no artists registered yet.\n";
+    if (artists_database.empty()) {
+        cout << "[!] There are no songs registered yet.\n";
         return;
     }
 
     cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED ARTISTS ~~~~~~~~~~~~~~~~~~~\n";
-    for (int i = 0;i < artists_counter; i ++) {
-        cout << "<- ID: [" << artists_database[i]->getArtistID() << "] -> " << artists_database[i]->getName() << " " << (artists_database[i]->getIsVerified() ? " (VERIFIED)" : "") << "\n";
+    vector<Artist*> sorted_artists;
+    for (const auto& pair: artists_database) {
+        sorted_artists.push_back(pair.second);
+    }
+    
+    sort(sorted_artists.begin(), sorted_artists.end(),
+        [](Artist* first, Artist* second) {
+            return first->getArtistID() < second->getArtistID();
+    });
+
+    for (Artist* current_artist: sorted_artists) {
+        cout << "<- ID: [" << current_artist->getArtistID() << "] -> " << current_artist->getName() << " " << (current_artist->getIsVerified() ? " (VERIFIED)" : "") << "\n";
     }
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
@@ -530,12 +486,13 @@ void StreamingPlatformApp::ViewArtistsDB() {
         int chosenID = get_int_input_validation(" <--- Enter the Artist ID: ");
        
 
-        int index_in_db = find_artist_index_inDB_byID(chosenID);
-    
+        auto chosen_artist_it = artists_database.find(chosenID);
+        
         // if exist in database print it and increase the monthlylisteners like you listened to it
-        if (index_in_db != -1) {
-            ++(*artists_database[index_in_db]);
-            cout << *artists_database[index_in_db];
+        if (chosen_artist_it != artists_database.end()) {
+            Artist* chosen_artist = chosen_artist_it->second;
+            ++(*chosen_artist);
+            cout << *chosen_artist;
         } else {
             cout <<" <--- [!] Invalid ID. Going back to menu!\n";
         }
@@ -543,26 +500,34 @@ void StreamingPlatformApp::ViewArtistsDB() {
 }
 
 void StreamingPlatformApp::ViewSongsDB() { 
-    if (songs_counter == 0 ) {
+    if (songs_database.empty()) {
         cout << "[!] There are no songs registered yet.\n";
         return;
     }
 
-        cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~~\n";
-    for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
-        int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
+    cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~~\n";
+    vector<Song*> sorted_songs;
+    for (const auto& pair : songs_database) {
+        sorted_songs.push_back(pair.second);
+    }
+
+    sort(sorted_songs.begin(), sorted_songs.end(),
+        [](Song* first, Song* second) {
+            return first->getSongID() < second->getSongID();
+        });
+    
+    for (const Song* current_song: sorted_songs) {
+        int current_artistID = current_song->getSongsArtistID();
+        auto current_artist_it = artists_database.find(current_artistID);
 
         string current_artistName;
-        int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
-
-        if (artistIndex_inDB != -1) {
-            current_artistName = artists_database[artistIndex_inDB]->getName();
-        } else {
-            current_artistName = "Unknown";
+        if (current_artist_it != artists_database.end()) {
+            current_artistName = current_artist_it->second->getName();
         }
 
-        cout << " <- ID: [" <<songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
+        cout << " <- ID: [" <<current_song->getSongID() << "] -> "<< current_song->getTitle() << " - " << current_artistName << "\n";
     }
+    
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
     char user_input = get_yesno_input_validation("\n[?] Would you like to view a specific song's full profile? (y/n): ");
@@ -570,12 +535,13 @@ void StreamingPlatformApp::ViewSongsDB() {
     if (user_input == 'y' || user_input == 'Y') {
         int chosenID = get_int_input_validation(" <--- Enter the Song ID: ");
 
-        int index_in_db = this->find_song_index_inDB_byID(chosenID);
+        auto chosen_song_it = songs_database.find(chosenID);
 
         // if exist in database print it and increase the streams like you listened to it
-        if (index_in_db != -1) {
-            ++(*songs_database[index_in_db]);
-            cout << *songs_database[index_in_db];
+        if (chosen_song_it != songs_database.end()) {
+            Song* chosen_song = chosen_song_it->second;
+            ++(*chosen_song);
+            cout << *chosen_song;
             cout << "\n [1] Play Now ~ [2] Add to Queue ~ [0] Go Back: \n";
             int user_choice = get_int_input_validation("Choose an action: ");
             
@@ -583,13 +549,13 @@ void StreamingPlatformApp::ViewSongsDB() {
             while (looping) {
                 switch(user_choice) {
                     case 1: 
-                        songs_database[index_in_db]->simulatePlayItem();
+                        chosen_song->simulatePlayItem();
                         looping = false;
                         break;
                     case 2:
-                        if (this->queue_counter < this->MAX_QUEUE_SIZE - 1) {
-                            music_queue[queue_counter ++] = songs_database[index_in_db];
-                            cout << " [SUCCES] Song " << songs_database[index_in_db]->getTitle() << " Added in the queue!\n";
+                        if (music_queue.size() < this->MAX_QUEUE_SIZE) {
+                            music_queue.push_back(chosen_song);
+                            cout << " [SUCCES] Song " << chosen_song->getTitle() << " Added in the queue!\n";
                         } else {
                             cout << "[!] Queue is already full!\n";
                         }
@@ -654,7 +620,7 @@ void StreamingPlatformApp::AccountSettings() {
                 cout << "[!] Invalid option. Try again!\n";
         }   
     }
-};
+}
 
 void StreamingPlatformApp::ManageLikedSongs() {
     // int user_choice;
@@ -674,14 +640,14 @@ void StreamingPlatformApp::ManageLikedSongs() {
 
        int user_choice = get_int_input_validation("Choose an action: ");
     
-        switch (user_choice) {
-            case 1: {
-                int liked_songs_num = current_user->getSongsArrSize();
-                if (liked_songs_num) {
+       switch (user_choice) {
+           case 1: {
+                const vector<Song*>& liked_songs = current_user->getLikedSongs();
+                if (!liked_songs.empty()) {
                     cout <<"\n~~~~~~~~~~~~~~~~~ Your Liked Songs ~~~~~~~~~~~~~~~~~\n";
 
-                    for (int i = 0;i < liked_songs_num; i ++) {
-                        cout << "[ ID: " << current_user->getLikedSongs()[i]->getSongID() << "] " << current_user->getLikedSongs()[i]->getTitle() << "\n"; 
+                    for (const Song* song : liked_songs) {
+                        cout << "[ ID: " << song->getSongID() << "] " << song->getTitle() << "\n"; 
                     }
                     cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
@@ -694,87 +660,70 @@ void StreamingPlatformApp::ManageLikedSongs() {
         
             case 2: {
 
-                if (songs_counter == 0 ) {
+                if (songs_database.empty()) {
                     cout << "[!] There are no songs registered yet.\n";
                     show_menu = true;
                     break;
                 }
 
                 cout << "\n~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~\n";
-                for (int idx_songsdb = 0; idx_songsdb < songs_counter; idx_songsdb ++) {
-                    int current_artistID = songs_database[idx_songsdb]->getSongsArtistID();
+                vector<Song*> sorted_songs;
+                for (const auto& pair : songs_database) {
+                    sorted_songs.push_back(pair.second);
+                }
+
+                sort(sorted_songs.begin(), sorted_songs.end(),
+                    [](Song* first, Song* second) {
+                        return first->getSongID() < second->getSongID();
+                    });
+                
+                for (Song* current_song: sorted_songs) {
+                    int current_artistID = current_song->getSongsArtistID();
+                    auto current_artist_it = artists_database.find(current_artistID);
 
                     string current_artistName;
-                    int artistIndex_inDB = find_artist_index_inDB_byID(current_artistID); 
-
-                    if (artistIndex_inDB != -1) {
-                        current_artistName = artists_database[artistIndex_inDB]->getName();
-                    } else {
-                        current_artistName = "Unknown";
+                    if (current_artist_it != artists_database.end()) {
+                        current_artistName = current_artist_it->second->getName();
                     }
 
-                    cout << " <- ID: [" << songs_database[idx_songsdb]->getSongID() << "] -> "<< songs_database[idx_songsdb]->getTitle() << " - " << current_artistName << "\n";
+                    cout << " <- ID: [" <<current_song->getSongID() << "] -> "<< current_song->getTitle() << " - " << current_artistName << "\n";
                 }
+                
                 cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
                 int songID_input = get_int_input_validation("\n <--- What song do you like (type Song ID): ");
    
 
-                int index_in_db = this->find_song_index_inDB_byID(songID_input);
+                auto liked_song_it =songs_database.find(songID_input);
 
-                if (index_in_db == -1) {
+                if (liked_song_it == songs_database.end()) {
                     cout << " [!] Invalid ID. Going back to menu!\n";
                     show_menu = true;
                     break;
                 }
                 
-
-                // bool already_liked = false;
-                // for (int i = 0; i < current_user->getSongsArrSize() && !already_liked; i++ ) {
-                //     if (songs_database[index_in_db]->getSongID() == current_user->getLikedSongs()[i]->getSongID()) {
-                //         cout << "[!] You have already liked this song!\n";
-                //         show_menu = true;
-                //         already_liked = true;
-                //     }  
-                // }
-                // if (!already_liked) {
-                *current_user += *songs_database[index_in_db];
-                // }
-
+                *current_user += *(liked_song_it->second);
                 
                 show_menu = true;
                 break;
             }
             
             case 3: {
-                int liked_songs_num = current_user->getSongsArrSize();
-                if (!liked_songs_num) {
+                const vector<Song*>& liked_songs = current_user->getLikedSongs();
+                if (liked_songs.empty()) {
                     cout << "\n[!] You don't have any liked songs to remove!\n";
                     show_menu = true;
                     break;
                 }
 
                 cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~ YOUR LIKED SONGS ~~~~~~~~~~~~~~~~~~~~~\n";
-                for (int i = 0;i < liked_songs_num; i ++ ){
-                    cout << " <- ID: [" << current_user->getLikedSongs()[i]->getSongID() << "] -> " << current_user->getLikedSongs()[i]->getTitle() << "\n";
+                for (const Song* song : liked_songs ){
+                    cout << " <- ID: [" << song->getSongID() << "] -> " << song->getTitle() << "\n";
                 }
 
                 int songID_input = get_int_input_validation("\n[?] What song do you want to remove (type Song ID): ");
                 
-                int index_in_liked = -1;
-                for (int i = 0; i < liked_songs_num; i++) {
-                    if (current_user->getLikedSongs()[i]->getSongID() == songID_input) {
-                        index_in_liked = i; 
-                        break;
-                    }
-                }
-                if (index_in_liked == -1) {
-                    cout << " <--- [!] Invalid ID. Going back to menu!\n";
-                    show_menu = true;
-                    break;
-                }
-
-                *current_user -= index_in_liked;
+                *current_user -= songID_input;
 
                 show_menu = true;
                 break;
@@ -876,7 +825,7 @@ void StreamingPlatformApp::ManageSubscriptions() {
     int user_choice = (premium_user != nullptr) ? 4 : get_int_input_validation("Choose a plan: ");
     if (!user_choice) return;
 
-    int db_index = find_user_index_inDB();
+    auto db_current_user_it = users_database.find(current_user->getUsername());    
     int saved_id = current_user->getUserID();
     string saved_name = current_user->getUsername();
     string saved_password = current_user->getPassword();
@@ -910,25 +859,23 @@ void StreamingPlatformApp::ManageSubscriptions() {
     delete current_user;
 
 
-    users_database[db_index] = upgraded_subs_user;
+    db_current_user_it->second  = upgraded_subs_user;
     current_user = upgraded_subs_user;
 
     cout << "[SUCCES] Congratulations! Subscription Activated!\n";
 }
 //!-----------------------------------------------------------
-
 void StreamingPlatformApp::playQueue() {
-    if(this->queue_counter == 0) {
+    if(this->music_queue.empty()) {
         cout << "\n############## [!] Your queue is empty! ##############  \n";
+        return;
     } else {
         cout << "\n ############## STARTING PLAYBACK QUEUE ############## \n";
-        for (int i = 0;i < this->queue_counter; i ++) {
-            this->music_queue[i]->simulatePlayItem();
-
-            this->music_queue[i] = nullptr;
+        for (playableItem* item: this->music_queue) {
+            item->simulatePlayItem();
         }
 
-        this->queue_counter = 0;
+        this->music_queue.clear();
         cout << "\n [!] ############## Queue finished and cleared! ##############\n";
     }
 }
@@ -989,42 +936,24 @@ void StreamingPlatformApp::signUp() {
 
     string input_username = get_name_input_validation(" [?] Enter a username: ");
 
-    bool already_exist = false;
-    for (int i = 0;i < this->users_counter && !already_exist; i ++) {
-        if (duplicate_name_ignoreCase(input_username, (*this->users_database[i]).getUsername())) {
-            already_exist = true;
-        }
-    }
+    string lowercase_username = input_username;
+    transform(lowercase_username.begin(), lowercase_username.end(), lowercase_username.begin(), ::tolower);
+    auto new_user_it = users_database.find(lowercase_username);
+    
 
-    if (already_exist) {
+    if (new_user_it != users_database.end()) {
         cout << "\n[!] Error: The username '" << input_username << "' is already taken!\n";
         return;
     }
 
     string input_password = get_name_input_validation(" [?] Enter a password: ");
-    //! snippet for subscription type attribute if i add it
 
     User* new_user = new User();
     new_user->setUsername(input_username);
     new_user->setPassword(input_password);
 
-    User** tempUsersDB = new User*[this->users_counter + 1];
-    for(int i = 0;i < this->users_counter; i ++ ){
-        tempUsersDB[i] = this->users_database[i];
-    }
-    tempUsersDB[this->users_counter] = new_user;
-    
-    if(this->users_database != nullptr) {
-        delete[] this->users_database;
-        this->users_database = nullptr;
-    }
-
-    this->users_database = new User*[++(this->users_counter)];
-    for (int i = 0;i < this->users_counter; i ++){
-        this->users_database[i] = tempUsersDB[i];
-    }
-
-    delete[] tempUsersDB;
+    //! LAS ASA CA KEY DE LA HASH SA AIBA numele lower si sa permita ca numele sa fie diferit sau?
+    users_database[lowercase_username] = new_user;
     this->current_user = new_user;
 
     cout << "\n[SUCCESS] Account created! Welcome, " << this->current_user->getUsername() << "!\n";
@@ -1035,36 +964,28 @@ void StreamingPlatformApp::signUp() {
 void StreamingPlatformApp::login() {
     cout << "\n~~~~~~~~~~~~~ LOG IN ~~~~~~~~~~~~~\n";
 
-    if (this->users_counter == 0) {
+    if (users_database.empty()) {
         cout << "[!] No accounts exist yet. Please Sign Up first!\n";
         return;
     }
 
     string input_username = get_name_input_validation(" [?] Enter your username: ");
-
-    bool user_found = false;
-    int current_user_index = -1;
-    for (int i = 0; i < this->users_counter && !user_found; i ++) {
-        if (duplicate_name_ignoreCase(this->users_database[i]->getUsername(), input_username)) {
-            user_found = true;
-            current_user_index = i;
-        }
-    }
-
-    if (!user_found) {
+    string lowercase_username = input_username;
+    transform(lowercase_username.begin(), lowercase_username.end(), lowercase_username.begin(), ::tolower);
+    auto user_found_it = users_database.find(lowercase_username);
+    
+    if (user_found_it == users_database.end()) {
         cout << "\n[!] Error: Username '" << input_username << "' not found.\n";
         return;
     }
-
+    User* found_user = user_found_it->second;
     string input_password = get_name_input_validation(" [?] Enter your password: ");
-    if (input_password == (*this->users_database[current_user_index]).getPassword()) {
-        this->current_user = this->users_database[current_user_index];
+    if (input_password == found_user->getPassword()) {
+        this->current_user = found_user;
         cout << "\n[SUCCESS] Logged in successfully! Welcome back, " << this->current_user->getUsername() << "!\n";
     } else {
         cout <<"\n[!] Wrong password!\n";
     }
-
-
 }
 
 void StreamingPlatformApp::mainMenu(bool& app_run_flag) {   
@@ -1126,22 +1047,22 @@ void StreamingPlatformApp::run() {
 void StreamingPlatformApp::preloadedData() {
     cout << "[i] Booting Database... Injecting Mock Data...\n";
 
-    this->artists_counter = 10;
-    this->artists_database = new Artist*[10];
+    // Create artists and add them to the database
+    vector<Artist*> artists;
+    artists.push_back(new Artist("Travis Scott", 60000000, {}, true));
+    artists.push_back(new Artist("Lil Uzi Vert", 35000000, {}, true));
+    artists.push_back(new Artist("A$AP Rocky", 30000000, {}, true));
+    artists.push_back(new Artist("Drake", 80000000, {}, true));
+    artists.push_back(new Artist("Kendrick Lamar", 55000000, {}, true));
+    artists.push_back(new Artist("The Weeknd", 100000000, {}, true));
+    artists.push_back(new Artist("Playboi Carti", 25000000, {}, true));
+    artists.push_back(new Artist("Future", 45000000, {}, true));
+    artists.push_back(new Artist("Tyler, The Creator", 32000000, {}, true));
+    artists.push_back(new Artist("Metro Boomin", 50000000, {}, true));
 
-    artists_database[0] = new Artist("Travis Scott", 60000000, {}, true);
-    artists_database[1] = new Artist("Lil Uzi Vert", 35000000, {}, true);
-    artists_database[2] = new Artist("A$AP Rocky", 30000000, {}, true);
-    artists_database[3] = new Artist("Drake", 80000000, {},true);
-    artists_database[4] = new Artist("Kendrick Lamar", 55000000, {},true);
-    artists_database[5] = new Artist("The Weeknd", 100000000, {},true);
-    artists_database[6] = new Artist("Playboi Carti", 25000000, {},true);
-    artists_database[7] = new Artist("Future", 45000000, {},true);
-    artists_database[8] = new Artist("Tyler, The Creator", 32000000, {},true);
-    artists_database[9] = new Artist("Metro Boomin", 50000000, {},true);
-
-    this->songs_counter = 50;
-    this->songs_database = new Song*[50];
+    for (Artist* artist : artists) {
+        artists_database[artist->getArtistID()] = artist;
+    }
 
     const char* travis_songs[] = {"SICKO MODE", "goosebumps", "STARGAZING", "HIGHEST IN THE ROOM", "BUTTERFLY EFFECT"};
     const char* uzi_songs[] = {"XO Tour Llif3", "20 Min", "Money Longer", "The Way Life Goes", "Just Wanna Rock"};
@@ -1156,13 +1077,13 @@ void StreamingPlatformApp::preloadedData() {
 
     const char** all_songs[] = {travis_songs, uzi_songs, rocky_songs, drake_songs, kendrick_songs, weeknd_songs, carti_songs, future_songs, tyler_songs, metro_songs};
 
-    int s_idx = 0;
 
-    for (int a_idx = 0; a_idx < 10; a_idx++) {
-        int current_artist_id = artists_database[a_idx]->getArtistID();
+    for (int a_idx = 0; a_idx < static_cast<int>(artists.size()); a_idx++) {
+        Artist* current_artist = artists[a_idx];
+        int current_artist_id = current_artist->getArtistID();
         
         for (int i = 0; i < 5; i++) {
-            // Giving random duration between 2m and 3m to the songs
+            // Giving random duration between 2de m and 3m to the songs
             int random_duration = 120 + (rand() % 60); 
             long long random_streams = 500000 + (rand() % 50000000); 
 
@@ -1170,61 +1091,37 @@ void StreamingPlatformApp::preloadedData() {
             int random_month = 1 + (rand() % 12);
             int random_day = 1 + (rand() % 28); // safety for feb
 
-            songs_database[s_idx] = new Song(all_songs[a_idx][i], random_duration, current_artist_id, {}, random_streams, Date(random_day, random_month, random_year));
+            Song* new_song =  new Song(all_songs[a_idx][i], random_duration, current_artist_id, {}, random_streams, Date(random_day, random_month, random_year));
+            //? cout << *current_artist <<endl; DEBUGGING
+            songs_database[new_song->getSongID()] = new_song;
             
-            artists_database[a_idx]->addTopSong(all_songs[a_idx][i]);
+            current_artist->addTopSong(all_songs[a_idx][i]);
             
-            s_idx++;
         }
     }
     
-    cout << "[SUCCESS] " << artists_counter << " Artists and " << songs_counter << " Songs successfully loaded into the matrix!\n";
+    cout << "[SUCCESS] " << artists_database.size() << " Artists and " << songs_database.size() << " Songs successfully loaded into the matrix!\n";
 
 }
 
 StreamingPlatformApp::~StreamingPlatformApp() {
     // cout << "DESTRUCTOR PT APP A AVUT LOC GOODBYE RETURN 0 PAPA S A TERMINAT HAHA DAI RUN IAR PAPA\n";
 
-    if (this->music_queue != nullptr) {
-        delete[] this->music_queue;
+    for (auto& pair : users_database) {
+        delete pair.second;
     }
 
-    if (this->users_database != nullptr) {
-        for (int i = 0; i < this->users_counter; i++) {
-            delete this->users_database[i];
-        }
-        delete[] this->users_database;
-        this->users_counter = 0;
+    for (auto& pair : songs_database ) {
+        delete pair.second;
     }
-
-    if (this->playlists_database != nullptr) {
-        for (int i = 0; i < this->playlists_counter; i++) {
-            delete this->playlists_database[i];
-        }
-        delete[] this->playlists_database;
-        this->playlists_counter = 0;
-    }
-
-    if (this->songs_database != nullptr) { 
-        for (int i = 0; i < this->songs_counter; i++) {
-            delete this->songs_database[i];
-        }
-        delete[] this->songs_database;
-        this->songs_counter = 0;
-    }
-
-    if (this->artists_database != nullptr) {
-        for (int i = 0; i < this->artists_counter; i++) {
-            delete this->artists_database[i];
-        }
-        delete[] this->artists_database;      
-        this->artists_counter = 0;
-    }
-
     
+    for (auto& pair : artists_database) {
+        delete pair.second;
+    }
 
-    
-
+    for (Playlist* p : playlists_database) {
+        delete p;
+    }
     
 }
 
@@ -1237,3 +1134,5 @@ int main() {
     SpotifyApp.run();
     return 0;
 }
+
+//valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./app

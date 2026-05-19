@@ -1,7 +1,4 @@
 #include <iostream>
-#include <cstring>
-// #include <string>
-// #include "classes.h"
 
 #include "utils.h"
 #include "artist.h"
@@ -18,7 +15,7 @@ Artist::Artist()
 
 
 Artist::Artist(const string& name, int monthlyListeners, const vector<string>& topSongs , bool isVerified)
-: ARTIST_ID(counter++),monthlyListeners(monthlyListeners), isVerified(isVerified) {
+: ARTIST_ID(counter++),name(name), monthlyListeners(monthlyListeners), isVerified(isVerified) {
     // cout<<"CONSTRUCTORUL CU TOTI PARAMETRII"<<endl;
     
 }
