@@ -668,8 +668,8 @@ void StreamingPlatformApp::ManageLikedSongs() {
 
                 cout << "\n~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~\n";
                 vector<Song*> sorted_songs;
-                for (const auto& pair : songs_database) {
-                    sorted_songs.push_back(pair.second);
+                for (const auto& [current_id, current_song] : songs_database) {
+                    sorted_songs.push_back(current_song);
                 }
 
                 sort(sorted_songs.begin(), sorted_songs.end(),
