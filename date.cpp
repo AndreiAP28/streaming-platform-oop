@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include "date.h"
+#include "exceptions.h"
 
 using namespace std;
 
@@ -38,7 +39,7 @@ void Date::setDate(int d, int m ,int y) {
         if (d > 0 && d <= 31 && m >= 1 && m <= 12 && y >= 1900 && y < 2500 ) {
             day = d; month = m; year = y;
         } else {
-            cout << "[!] Invalid date format!" << endl;
+            throw InvalidActionException("Invalid date format");
         }
     }
 

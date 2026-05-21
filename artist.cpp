@@ -1,101 +1,42 @@
-#include <iostream>
+ #include <iostream>
+#include <sstream>
+
 
 #include "utils.h"
 #include "artist.h"
+#include "app.h"
+#include "exceptions.h"
+
 
 using namespace std;
 
 
-int Artist::counter = 1000;
+// int Artist::counter = 1000;
 //!-------------------------------CONSTRUCTORS---------------------------------------------
 Artist::Artist()
-: ARTIST_ID(counter++), name("N/A"), monthlyListeners(0), isVerified(false) { 
+: name("N/A"), monthlyListeners(0), isVerified(false) { 
     // cout<<"CONSTRUCTORUL FARA PARAMETRII"<<endl;    
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Artist added.");
 }
 
 
 Artist::Artist(const string& name, int monthlyListeners, const vector<string>& topSongs , bool isVerified)
-: ARTIST_ID(counter++),name(name), monthlyListeners(monthlyListeners), isVerified(isVerified) {
+: name(name), monthlyListeners(monthlyListeners), isVerified(isVerified) {
     // cout<<"CONSTRUCTORUL CU TOTI PARAMETRII"<<endl;
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Artist added.");
+
     
 }
 
 Artist::Artist(const string& name)
-: ARTIST_ID(counter++), name(name), monthlyListeners(0), isVerified(false) { 
+: name(name), monthlyListeners(0), isVerified(false) { 
     // cout<<"CONSTRUCTORUL CU NUME"<<endl;
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Artist added.");
+
 }
 
-// Artist::Artist(const Artist& other_artist)
-// : ARTIST_ID(other_artist.ARTIST_ID), monthlyListeners(other_artist.monthlyListeners),topSongsSize(other_artist.topSongsSize), isVerified(other_artist.isVerified) {
-//      cout<<"CONSTRUCTOR DE COPIERE ARTIST"<<endl;
-    
-//     if (other_artist.name != nullptr) {
-//         this->name = new char[strlen(other_artist.name) + 1];
-//         strcpy(this->name, other_artist.name);
-//     } else {
-//         this->name = new char[4];
-//         strcpy(this->name, "N/A");
-//     }
-
-//     if (other_artist.topSongs != nullptr && other_artist.topSongsSize > 0){
-//         this->topSongs = new char*[other_artist.topSongsSize];
-//         for(int i = 0; i < other_artist.topSongsSize; i ++ ){ 
-//             this->topSongs[i] = new char[strlen(other_artist.topSongs[i]) + 1];
-//             strcpy(this->topSongs[i], other_artist.topSongs[i]);
-//         }
-
-//     } else {
-//         this->topSongs = nullptr;
-//         this->topSongsSize = 0;
-//     }
-// }
 
 //!------------------------------- OVERWRITTING---------------------------------------------
-// Artist& Artist::operator=(const Artist& other_artist) { 
-//     if (this == &other_artist) return *this;
-
-//     if (this->name != nullptr) {
-//         delete[] this->name;
-//         this->name = nullptr;
-//     }
-    
-//     if (other_artist.name != nullptr) {
-//         this->name = new char[strlen(other_artist.name) + 1];
-//         strcpy(this->name, other_artist.name);
-//     } else {
-//         this->name = new char[4];
-//         strcpy(this->name, "N/A");
-//     }
-        
-
-//     if (this->topSongs != nullptr && this->topSongsSize > 0) { 
-//         for( int i = 0; i < this->topSongsSize; i ++) {
-//             delete[] this->topSongs[i];
-//         }
-//         delete[] this->topSongs;
-//         this->topSongs = nullptr;
-//         this->topSongsSize = 0;
-//     }
-
-//     if (other_artist.topSongs != nullptr && other_artist.topSongsSize > 0) {
-        
-//         this->topSongs = new char*[other_artist.topSongsSize];
-//         this->topSongsSize = other_artist.topSongsSize;
-//         for(int i = 0; i < other_artist.topSongsSize; i ++ ) {
-//             this->topSongs[i] = new char[strlen(other_artist.topSongs[i]) + 1];
-//             strcpy(this->topSongs[i], other_artist.topSongs[i]);
-//         }
-//     } else {
-//         this->topSongs = nullptr;
-//         this->topSongsSize = 0;
-//     }
-
-
-//     this->monthlyListeners = other_artist.monthlyListeners;
-//     this->isVerified = other_artist.isVerified;
-
-//     return *this;
-// }
 
 bool Artist::operator==(const Artist& other_artist) const {
     if (this->monthlyListeners != other_artist.monthlyListeners) {
@@ -164,8 +105,7 @@ Artist operator+(int new_mListeners, const Artist& artist) {
 
 Artist Artist::operator-(int remove_mListeners) const {
     if (remove_mListeners > this->monthlyListeners) {
-        cout<<"Error: There is not enough monthly listeners to be removed!" << endl;
-        return *this;
+        throw InvalidActionException("There are not enough monthly listeners to be removed!");
     }
 
     Artist temp = *this;
@@ -200,13 +140,11 @@ Artist& Artist::operator-=(int remove_mListeners) {
 
 string Artist::operator[](int index) const {
     if (this->topSongs.empty()) {
-        cout<<"Error: This artist does not have at least 1 song yet!" << endl;
-        return "N/A";
+        throw InvalidActionException("This artist does not have any songs registered yet!");
     }
 
     if (index < 0 || index >= static_cast<int> (this->topSongs.size())) {
-        cout << "Error: Index out of range! try a index between 0 and " << (this->topSongs.size() - 1) << "." << endl;
-        return "N/A";
+        throw OutOfRangeException(index, static_cast<int> (this->topSongs.size()));
     }
     
     return this->topSongs[index];
@@ -226,25 +164,25 @@ istream& operator>>(istream& in, Artist& artist) {
     return in;
 }
 
-ostream& operator<<(ostream& os, const Artist& artist) {
-   os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    os << "|                ARTIST PROFILE                  |\n";
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    os << "|  NAME: " << artist.name << (artist.isVerified ? " [VERIFIED]" : "") << "\n";
-    os << "|  MONTHLY LISTENERS: " << artist.monthlyListeners << "\n";
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    if (artist.topSongs.empty()) {
-        os << "|  [!] This artist has no top songs yet...       |\n";
-    } else {
-        os << "|  TOP SONGS:                                    |\n";
-        for (int i = 0; i < static_cast<int>(artist.topSongs.size()); i++) {
-            os << "|    [" << (i + 1) << "]. " << artist.topSongs[i] << "\n"; 
-        }
-    }
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+// ostream& operator<<(ostream& os, const Artist& artist) {
+//    os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     os << "|                ARTIST PROFILE                  |\n";
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     os << "|  NAME: " << artist.name << (artist.isVerified ? " [VERIFIED]" : "") << "\n";
+//     os << "|  MONTHLY LISTENERS: " << artist.monthlyListeners << "\n";
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     if (artist.topSongs.empty()) {
+//         os << "|  [!] This artist has no top songs yet...       |\n";
+//     } else {
+//         os << "|  TOP SONGS:                                    |\n";
+//         for (int i = 0; i < static_cast<int>(artist.topSongs.size()); i++) {
+//             os << "|    [" << (i + 1) << "]. " << artist.topSongs[i] << "\n"; 
+//         }
+//     }
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
 
-    return os;
-}
+//     return os;
+// }
 
 //!-------------------------------SETTERS------------------------------------------
 void Artist::addTopSong(const string& songName) { 
@@ -257,6 +195,30 @@ void Artist::addTopSong(const string& songName) {
 void Artist::setName(const string& artist_name) {
     if (artist_name.empty()) return;
     this->name = artist_name;
+}
+
+
+//!------------------------------- INHERITED METHODS---------------------------------------------
+string Artist::toString() const {
+    ostringstream os;
+
+    os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    os << "|                ARTIST PROFILE                  |\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    os << "|  NAME: " << this->name << (this->isVerified ? " [VERIFIED]" : "") << "\n";
+    os << "|  MONTHLY LISTENERS: " << this->monthlyListeners << "\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    if (this->topSongs.empty()) {
+        os << "|  [!] This artist has no top songs yet...       |\n";
+    } else {
+        os << "|  TOP SONGS:                                    |\n";
+        for (int i = 0; i < static_cast<int>(this->topSongs.size()); i++) {
+            os << "|    [" << (i + 1) << "]. " << this->topSongs[i] << "\n"; 
+        }
+    }
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+
+    return os.str();
 }
 //!------------------------------- DESTRUCTORS---------------------------------------------
 

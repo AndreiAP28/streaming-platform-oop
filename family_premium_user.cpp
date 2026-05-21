@@ -1,6 +1,7 @@
 #include <iostream>
-#include <cstring>
+#include <sstream>
 #include "family_premium_user.h"
+#include "exceptions.h"
 
 using namespace std;
 
@@ -15,57 +16,10 @@ FamilyPremiumUser::FamilyPremiumUser(int old_id, const string& username, const s
     // cout << "FamilyPremiumUser()" << endl;
 }
 
-// FamilyPremiumUser::FamilyPremiumUser(const FamilyPremiumUser& other_user):
-//  PremiumUser(other_user), connectedAccounts(other_user.connectedAccounts) {
-
-//     if (other_user.MAX_ACCOUNTS && other_user.usernames != nullptr) {
-//         usernames = new char*[MAX_ACCOUNTS];
-//         for (int i = 0; i < MAX_ACCOUNTS; i ++) {
-//             usernames[i] = new char[strlen(other_user.usernames[i]) + 1];
-//             strcpy(usernames[i], other_user.usernames[i]);
-//         }
-//     } else {
-//         usernames = nullptr;
-//     }
-
-// }
-
-// FamilyPremiumUser& FamilyPremiumUser::operator=(const FamilyPremiumUser& other_user) {
-//     if (this == &other_user) return *this;
-
-//     PremiumUser::operator=(other_user);
-    
-//     if (this->usernames != nullptr && MAX_ACCOUNTS) {
-//         for(int i = 0; i < MAX_ACCOUNTS; i ++) {
-//             delete[] this->usernames[i];
-//         }
-//         delete[] this->usernames;
-//     }
-
-//     connectedAccounts = other_user.connectedAccounts;
-
-//     if (other_user.MAX_ACCOUNTS && other_user.usernames != nullptr) {
-//         this->usernames = new char*[MAX_ACCOUNTS];
-
-//         for (int i = 0;i < MAX_ACCOUNTS; i ++) {
-//             if (other_user.usernames[i] != nullptr) {
-//                 this->usernames[i] = new char[strlen(other_user.usernames[i]) + 1];
-//                 strcpy(this->usernames[i], other_user.usernames[i]);
-//             } else {
-//                 usernames[i] = nullptr;
-//             }
-//         }
-//     } else {
-//         this->usernames = nullptr;
-//     }
-
-//     return *this;
-// }
-    
 //!----------------------- GETTERS ---------------------
 const string& FamilyPremiumUser::getMember(int idx) const {
     if (idx < 0  || idx >= connectedAccounts ) {
-        throw out_of_range("Error: Index out of range!");
+        throw OutOfRangeException(idx, connectedAccounts);
     }
     
     return usernames[idx];
@@ -73,8 +27,7 @@ const string& FamilyPremiumUser::getMember(int idx) const {
 
 void FamilyPremiumUser::printMembers() const {
     if (connectedAccounts == 0) {
-        cout << " [!] There are no family members yet!";
-        return;
+        throw InvalidActionException("There are no members yet!");
     }
 
     cout << "  ~~~~~~~~~ Connected Family Members (" << this->connectedAccounts << " total) ~~~~~~~~~\n";
@@ -105,10 +58,31 @@ void FamilyPremiumUser::displayProfile() const {
     cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
 }
 
+string FamilyPremiumUser::toString() const {
+    string premium_profile = PremiumUser::toString();
+
+    ostringstream os;
+    os << "|               FAMILY MANAGEMENT                |\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    os << "|  ACCOUNTS IN USE: " << connectedAccounts << " / " << FamilyPremiumUser::MAX_ACCOUNTS << "\n";
+    
+    if (usernames.empty()) {
+        os << "|  [!] No members linked to this plan yet...     |\n";
+    } else {
+        os << "|  LINKED MEMBERS:                               |\n";
+        for (int i = 0; i < connectedAccounts; i++) {
+            os << "|    - " << usernames[i] << "\n"; 
+        }
+    }
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+
+    return premium_profile + os.str();
+
+}
+
 bool FamilyPremiumUser::addMember(const string& new_member) {
     if(connectedAccounts >= MAX_ACCOUNTS) {
-        cout <<" [!] Cannot add a new member. Family plan is already full.\n";
-        return false;
+        throw LimitExceededException("Family Plan", MAX_ACCOUNTS);
     } 
 
     if (new_member.empty()) {
@@ -127,13 +101,11 @@ bool FamilyPremiumUser::addMember(const string& new_member) {
 
 bool FamilyPremiumUser::removeMember(const string& removed_member) {
     if (connectedAccounts == 0) {
-        cout << "[!] There is no accounts signed to this Family Plan.\n";
-        return false;
+        throw InvalidActionException("There are no members in this Family Plan yet!");
     }
 
     if (removed_member.empty()) {
-        cout << "[!] Invalid name. Try again!\n";
-        return false;
+        throw InvalidActionException("Your input is invalid!");
     }
     
     int found_idx = -1;
@@ -145,8 +117,7 @@ bool FamilyPremiumUser::removeMember(const string& removed_member) {
     }
 
     if (found_idx == -1) {
-        cout << "[!] Member " << removed_member << " is not part of this Family Plan!\n";
-            return false;
+        throw ObjectNotFoundException("Family Member", removed_member);
     }
 
     usernames.erase(usernames.begin() + found_idx);

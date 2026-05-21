@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <list>
 #include <vector>
+#include <fstream>
 
 
 
@@ -16,37 +17,31 @@ class playableItem;
 
 class StreamingPlatformApp {
 
-    // Artist** artists_database;
-    // int artists_counter;
     std::unordered_map<int, Artist*> artists_database;
-
-    // Playlist** playlists_database;
-    // int playlists_counter;
     std::vector<Playlist*> playlists_database;
-
-    // Song** songs_database;
-    // int songs_counter;
     std::unordered_map<int, Song*> songs_database;
-
-    // User** users_database;
-    // int users_counter;
     std::unordered_map<std::string, User*> users_database;
     User* current_user;
-
-    // playableItem** music_queue;
-    // int queue_counter;
     std::list<playableItem*> music_queue;
     static const int MAX_QUEUE_SIZE;
+    // std::ofstream f;
+
+    StreamingPlatformApp();
     
 
 public:
-    StreamingPlatformApp();
-    ~StreamingPlatformApp();
+    StreamingPlatformApp(const StreamingPlatformApp& other_app) = delete;
+    StreamingPlatformApp& operator=(const StreamingPlatformApp& other_app) = delete;
+
+    static StreamingPlatformApp& getInstance();
+    void systemLog(const std::string& message);
 
     void run();
+    ~StreamingPlatformApp() noexcept;
+    
+private:
     void preloadedData();
 
-private:
     void connectingMenu();
     void signUp(); 
     void login();
@@ -70,10 +65,7 @@ private:
     void AccountSettings();
     void ManageSubscriptions();
     void ManageLikedSongs();
+    void DisplayLogs();
 
-    // int find_artist_index_inDB_byID(int chosenID_by_user) const;
-    // int find_song_index_inDB_byID(int chosenID_by_user) const;
-    // int find_playlist_index_inDB_byID(int chosenID_by_user) const;
-    // int find_user_index_inDB() const;
     bool duplicate_name_ignoreCase(const std::string& name1, const std::string& name2);
 };

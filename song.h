@@ -9,8 +9,8 @@
 #include "playable_item.h"
 
 class Song: public playableItem { 
-    static int counter;
-    const int SONG_ID;
+    // static int counter;
+    // const int SONG_ID;
     std::string title;
     int durationSec;
     int artistID;
@@ -24,13 +24,8 @@ public:
     Song();
     Song(const std::string& title, int durationSec, int artistID, const std::vector<std::string>& artistFeatures, long long streams, const Date& dateParam);
     Song(const std::string& title);
-    // Song(const Song& other_song);
 
     //!     OVERWRITTING OPERATORS
-
-    // Song& operator=(const Song& other_song);
-
-    
     Song& operator++(); //? ++ song
     Song& operator--(); //? -- song
     Song operator++(int dummy); //? song ++
@@ -52,37 +47,16 @@ public:
     const std::string& operator[](int index) const;
 
     friend std::istream& operator>>(std::istream& in, Song& song);
-    friend std::ostream& operator<<(std::ostream& os, const Song& song);
+    // friend std::ostream& operator<<(std::ostream& os, const Song& song);
     
     //!     GETTERS
-    const std::string& getTitle() const {
-        return this->title;
-    }
-
-    int getDuration() const {
-        return this->durationSec;
-    }
-
-    int getSongsArtistID() const{ 
-        return this->artistID;
-    }
-
-    const int getSongID() const {
-        return this->SONG_ID;
-    }
-
-    long long getStreams() const {
-        return this->streams;
-    }
-
-    const std::vector<std::string>& getFeatures() const {
-        return this->artistsFeatures;
-    }
-
-    int getFeaturesNum() const {
-        return this->artistsFeatures.size();
-    }
-
+    const std::string& getTitle() const { return this->title; }
+    int getDuration() const { return this->durationSec; }
+    int getSongsArtistID() const{return this->artistID; }
+    const int getSongID() const { return this->getID(); }
+    long long getStreams() const { return this->streams; }
+    const std::vector<std::string>& getFeatures() const { return this->artistsFeatures; }
+    int getFeaturesNum() const { return this->artistsFeatures.size(); }
     //!     SETTERS
 
     void addFeature(const std::string& featureName);
@@ -92,6 +66,7 @@ public:
     //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
     void simulatePlayItem() override;
     long long calculateTotalStreams() const override;
+    std::string toString() const override;
 
     //!     DESTRUCTOR
     // ~Song();

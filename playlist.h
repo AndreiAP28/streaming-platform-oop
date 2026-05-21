@@ -13,8 +13,8 @@ class Song;
 //! CAND FOLOSIM DIRECT PT MOSTENIRE O CLASA DIN ALT HEADER SAU ATRIBUT DIRECT ACEA CLASA TREBUIE INCLUS ACEL HEADER
 
 class Playlist: public playableItem {
-    static int counter;
-    const int PLAYLIST_ID;
+    // static int counter;
+    // const int PLAYLIST_ID;
     std::string name;
     std::string owner_username;
     std::vector<Song*> songs;
@@ -28,10 +28,8 @@ public:
     //! const Song* const* -> lock both addresses and the object from that address
     Playlist(const std::string& name, const std::string& owner_username, const std::vector<Song*>& songs, int totalDuration );
     Playlist(const std::string& name, const std::string& owner_username);
-    // Playlist(const Playlist& other_playlist);
 
     //!     OVERWRITTING OPERATORS
-    // Playlist& operator=(const Playlist& other_playlist);
 
     Playlist& operator-=(int removed_index);
     Playlist& operator+=(Song& new_song);
@@ -45,13 +43,13 @@ public:
     const Song& operator[](int index) const;
 
     friend std::istream& operator>>(std::istream& in, Playlist& playlist);
-    friend std::ostream& operator<<(std::ostream& os, const Playlist& playlist);
+    // friend std::ostream& operator<<(std::ostream& os, const Playlist& playlist);
     
     //!     GETTERS
-    static int getCounter() { return counter; }
+    // static int getCounter() { return counter; }
     std::string getName() const { return name; }
     std::string getOwnerUsername() const { return owner_username; }
-    const int getPlaylistID() const { return PLAYLIST_ID; }
+    const int getPlaylistID() const { return this->getID(); }
     const std::vector<Song*>& getSongs() const { return songs; }
     int getSongsSize() const { return songs.size(); } 
     int getTotalDuration() const { return totalDurationSec; }
@@ -67,7 +65,7 @@ public:
     //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
     void simulatePlayItem() override;
     long long calculateTotalStreams() const override;
-
+    std::string toString() const override;
     //!     DESTRUCTORS
     // ~Playlist();
 

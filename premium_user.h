@@ -38,8 +38,9 @@ public:
 
     //!------------------ OTHER METHODS -----------------
     void displayProfile() const override;
+    std::string toString() const override;
     //!------------------- DESTRUCTOR ---------------------
-    ~PremiumUser();
+    ~PremiumUser() noexcept;
 
 
 };

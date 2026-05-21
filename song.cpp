@@ -2,100 +2,46 @@
 #include <thread>
 #include <chrono>
 #include <stdexcept>    
-
+#include <sstream>
 // #include "classes.h"
 
 #include "utils.h"
 #include "song.h"
-// #include "date.h"
+#include "app.h"
+#include "exceptions.h"
 
 using namespace std;
 
 
 
-int Song::counter = 3000;
+// int Song::counter = 3000;
 //!-------------------------CONSTRUCTORS--------------------------------
 Song::Song():
- SONG_ID(counter++), durationSec(0), artistID(0), streams(0), releaseDate() {
+durationSec(0), artistID(0), streams(0), releaseDate() {
     // cout<<"CONSTRUCTORUL SONG DEFAULT CREAT"<<endl;
     // cout << "Song()" << endl;
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Song added to the database.");
 }
 
 Song::Song(const string& title, int durationSec, int artistID, const vector<string>& artistsFeatures, long long streams, const Date& dateParam) 
-: SONG_ID(counter++), title(title), durationSec(durationSec), artistID(artistID), streams(streams), releaseDate(dateParam) {
+:title(title), durationSec(durationSec), artistID(artistID), streams(streams), releaseDate(dateParam) {
     // cout << "CONSTRUCTORUL SONG CU TOTI PARAM CREAT" << endl;
     // cout << "Song()" << endl;
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Song added to the database.");
+
 }
 
 Song::Song(const string& title)
-:SONG_ID(counter++),title(title), durationSec(0), artistID(0), streams(0), releaseDate() {
+:title(title), durationSec(0), artistID(0), streams(0), releaseDate() {
     // cout << "CONSTRUCTOR SONG CU TITLU CREAT" << endl;
     // cout << "Song()" << endl;
+    StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Song added to the database.");
+
 }
 
-// Song::Song(const Song& other_song)
-// : SONG_ID(other_song.SONG_ID), durationSec(other_song.durationSec), artistID(other_song.artistID), streams(other_song.streams), releaseDate(other_song.releaseDate) {
-//     // cout << "CONSTRUCTOR SONG DE COPIERE " << endl;
-
-//     this->title = new char[strlen(other_song.title) + 1];
-//     strcpy(this->title, other_song.title);
-
-
-//     if (other_song.artistsFeatures.size() > 0 && other_song.artistsFeatures != nullptr) {
-//         this->artistsFeatures = new char*[other_song.artistsFeatures.size()];
-//         this->artistsFeatures.size() = other_song.artistsFeatures.size();
-
-//         for ( int i = 0; i < other_song.artistsFeatures.size(); i ++ ) {
-//             this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
-//             strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
-//         }
-//     } else {
-//         this->artistsFeatures = nullptr;
-//         this->artistsFeatures.size() = 0;
-//     }
-// }
 
 
 //!------------------------------OVERWRITTING OPERATORS-------------------
-// Song& Song::operator=(const Song& other_song) {
-//     if(this == &other_song) return *this;
-
-
-//     if(this->title != nullptr) {
-//         delete[] title;
-//         title = nullptr;
-//     }    
-
-//     title = new char[ strlen(other_song.title) + 1];
-//     strcpy(title, other_song.title);
-
-//     if(this->artistsFeatures != nullptr) {
-//        for ( int i = 0; i < this->artistsFeatures.size(); i ++) {
-//             delete[] this->artistsFeatures[i];
-//        }
-       
-//         delete[] this->artistsFeatures;
-//         this->artistsFeatures = nullptr;
-//         this->artistsFeatures.size() = 0;
-//     }
-
-
-//     if (other_song.artistsFeatures.size() > 0 && other_song.artistsFeatures != nullptr) {
-//         artistsFeatures = new char*[other_song.artistsFeatures.size()];
-//         this->artistsFeatures.size() = other_song.artistsFeatures.size();
-//         for(int i = 0; i < other_song.artistsFeatures.size(); i ++) {
-//             this->artistsFeatures[i] = new char[strlen(other_song.artistsFeatures[i]) + 1];
-//             strcpy(this->artistsFeatures[i], other_song.artistsFeatures[i]);
-//         }
-//     } 
-
-//     durationSec = other_song.durationSec;
-//     artistID = other_song.artistID;
-//     streams = other_song.streams;
-//     releaseDate = other_song.releaseDate;
-
-//     return *this;
-// }
 
 Song& Song::operator++() {
     this->streams ++;
@@ -134,8 +80,7 @@ Song operator+(int add_new_streams, const Song& song) {
 
 Song Song::operator-(int remove_streams_number) const {
     if (remove_streams_number > this->streams) { 
-        cout << "ERROR: There are not enough streams to be removed!\n";
-        return *this;
+        throw InvalidActionException("There are not enough streams to be removed!");
     }
 
     Song temp = *this;
@@ -148,7 +93,7 @@ Song& Song::operator+=(int add_streams_number) {
     if (add_streams_number > 0) { 
         this->streams += add_streams_number;
     } else {
-        cout << "Error: You can't add a negative number of stream (for removing streams use the operator '-') !";
+        throw InvalidActionException("You can't add a negative number of stream (for removing streams use the operator '-')");
     }
 
     return *this;
@@ -192,18 +137,16 @@ bool Song::operator>=(const Song& other_song) const {
 
 const string& Song::operator[](int index) const {
     if (this->artistsFeatures.empty()) {
-        cout << "There are not features on this song!\n";
-        throw out_of_range("Error: There are no features on this song!");
+        throw InvalidActionException("There are not features on this song!");
     }
 
     if (index < 0 || index >= static_cast<int>(this->artistsFeatures.size())) {
-        throw out_of_range("Error: Index out of range!");
+        throw OutOfRangeException(index, static_cast<int>(this->artistsFeatures.size()));
     }
 
     return this->artistsFeatures[index];
 }
 
-//! VEZI DACA POTI LASA ASA FARA SA CITESTI DIN IN>>
 istream& operator>>(istream& in, Song& song) {
     song.artistsFeatures.clear();
 
@@ -222,38 +165,39 @@ istream& operator>>(istream& in, Song& song) {
     return in;
 }
 
-ostream& operator<<(ostream& os,const Song& song) {
-   os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    os << "|                 SONG PROFILE                   |\n";
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+// ostream& operator<<(ostream& os,const Song& song) {
+//    os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     os << "|                 SONG PROFILE                   |\n";
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     
-    os << "|  ID: [" << song.artistID << "]  TITLE: " << song.title << "\n";
+//     os << "|  ID: [" << song.artistID << "]  TITLE: " << song.title << "\n";
     
-    if (!song.artistsFeatures.empty()) {
-        os << "|  FEATURING: ";
-        for (int i = 0; i < static_cast<int>(song.artistsFeatures.size()); i++) {
-            os << song.artistsFeatures[i];
-            if (i != static_cast<int>(song.artistsFeatures.size()) - 1) {
-                os << ", ";
-            }
-        }
-        os << " \n";
-    }
+//     if (!song.artistsFeatures.empty()) {
+//         os << "|  FEATURING: ";
+//         for (int i = 0; i < static_cast<int>(song.artistsFeatures.size()); i++) {
+//             os << song.artistsFeatures[i];
+//             if (i != static_cast<int>(song.artistsFeatures.size()) - 1) {
+//                 os << ", ";
+//             }
+//         }
+//         os << " \n";
+//     }
     
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
-    os << "|  STREAMS: " << song.streams << "\n";
-    os << "|  DURATION: " << song.durationSec << " seconds\n";
-    os << "|  RELEASE DATE: " << song.releaseDate.getDay() << "/" <<song.releaseDate.getMonth() << "/" << song.releaseDate.getYear() << endl;
-    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+//     os << "|  STREAMS: " << song.streams << "\n";
+//     os << "|  DURATION: " << song.durationSec << " seconds\n";
+//     os << "|  RELEASE DATE: " << song.releaseDate.getDay() << "/" <<song.releaseDate.getMonth() << "/" << song.releaseDate.getYear() << endl;
+//     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     
 
-    return os;
-}
+//     return os;
+// }
 
 
 //!------------------------SETTERS----------------------------------------
 void Song::addFeature(const string& featureName) {
-    if (featureName.empty()) return;
+    if (featureName.empty()) 
+        throw InvalidActionException("Artist name can't be empty!");
 
     this->artistsFeatures.push_back(featureName);
     // cout<< "ADAUGAT CU SUCCES " << featureName << endl;  
@@ -279,6 +223,35 @@ void Song::simulatePlayItem() {
 
 long long Song::calculateTotalStreams() const {
     return this->streams;
+}
+
+string Song::toString() const {
+    ostringstream os;
+    os << "\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    os << "|                 SONG PROFILE                   |\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    
+    os << "| System ID: [" << this->getID() << "]  TITLE: " << this->title << "\n";
+    
+    if (!this->artistsFeatures.empty()) {
+        os << "|  FEATURING: ";
+        for (int i = 0; i < static_cast<int>(this->artistsFeatures.size()); i++) {
+            os << this->artistsFeatures[i];
+            if (i != static_cast<int>(this->artistsFeatures.size()) - 1) {
+                os << ", ";
+            }
+        }
+        os << " \n";
+    }
+    
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    os << "|  STREAMS: " << this->streams << "\n";
+    os << "|  DURATION: " << this->durationSec << " seconds\n";
+    os << "|  RELEASE DATE: " << this->releaseDate.getDay() << "/" <<this->releaseDate.getMonth() << "/" << this->releaseDate.getYear() << endl;
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    
+
+    return os.str();
 }
 
 //!-------------------------DESTRUCTOR------------------------------------

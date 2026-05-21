@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include "premium_user.h"
 
 
@@ -117,6 +118,26 @@ void PremiumUser::displayProfile() const {
     expirationDate.formattedDate(); 
     cout << "\n";
     cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+}
+
+string PremiumUser::toString() const {
+    string user_standard_profile = User::toString();
+
+    ostringstream os;
+    os << "|                  PREMIUM PLAN                  |\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+    
+    os << "|  CURRENT PLAN: " << this->getPlanName() << "\n";
+    os << "|  MONTHLY FEE : $" << subsFee << "\n";
+    
+    os << "|  STUDENT     : " << (isStudent ? "YES" : "NO") << "\n";
+    
+    os << "|  EXPIRES ON  : ";
+    expirationDate.formattedDate(); 
+    os << "\n";
+    os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
+
+    return user_standard_profile + os.str();
 }
 //!------------------- DESTRUCTOR ---------------------
 PremiumUser::~PremiumUser() {

@@ -4,11 +4,20 @@
 #include "user.h"
 #include "premium_user.h"
 #include "family_premium_user.h"
+#include "exceptions.h"
 using namespace std;
 
+class TestStackUnwinding {
+public:
+    TestStackUnwinding() {
+        cout << "TestStackUnwiding()" << endl;
+    }
+    ~TestStackUnwinding() {
+        cout << "~TestStackUnwiding()" << endl;
+    }
+};
 
-
-// int main() {
+//int main() {
 
     // User* premiumUser = new PremiumUser();  
     // delete premiumUser; 
@@ -76,4 +85,15 @@ using namespace std;
 //     today.formattedDate();
 
 //     return 0;   
+// }
+
+// int main() {
+
+//     try {
+//         TestStackUnwinding test;
+//         throw StreamingAppException("Eroare pt a testa STACK UNWINDING");
+//         cout << "A trecut de throw\n";
+//     }catch(const StreamingAppException& e){
+//         cout << e.what()<<endl;
+//     }
 // }

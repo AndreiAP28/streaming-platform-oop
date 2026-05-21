@@ -12,7 +12,7 @@ public:
     Date(const Date& other_day);
 
     //!------------------- DESTRUCTOR -----------------------   
-    ~Date();
+    ~Date() noexcept;
 
     //! ------------------ GETTERS ----------------------------
     int getDay() const {return day; }

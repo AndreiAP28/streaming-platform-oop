@@ -3,16 +3,16 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include "IObject.h"
 
 
 class Song;
 
-class User {
+class User: public IObject {
 protected:
 // displayProfile function for polimorphism
-    static int counter;
-    const int USER_ID;
+    // static int counter;
+    // const int USER_ID;
     std::string username;
     std::string password;
     std::vector<Song*> liked_songs;
@@ -26,10 +26,7 @@ public:
     //used for inheritance 
     User(int old_id, const std::string& username, const std::string& password, const std::vector<Song*>& liked_songs);
 
-    // User(const User& other_user);
-
     //!--------------------------- OVERWRITTING OPERATORS--------------------
-    // User& operator=(const User& other_user);
     User& operator+=(Song& new_song);
     User& operator-=(int removed_index);
 
@@ -40,11 +37,11 @@ public:
     const Song& operator[](int index) const;
     
     friend std::istream& operator>>(std::istream& in, User& user);
-    friend std::ostream& operator<<(std::ostream& os, const User& user);
+    // friend std::ostream& operator<<(std::ostream& os, const User& user);
     //!--------------------------------GETTERS--------------------------
     const std::string& getUsername() const { return username;}
     const std::string& getPassword() const { return password;}
-    const int getUserID() const {return USER_ID;}
+    const int getUserID() const {return getID();}
     const std::vector<Song*>& getLikedSongs() const {return liked_songs;}
     int getSongsArrSize() const{return liked_songs.size();}
     //!--------------------------------SETTERS--------------------------
@@ -54,7 +51,9 @@ public:
     void add_likedSong(Song& new_song);
     //!--------------------------------------------------------------------
     virtual void displayProfile() const;
+    //!----------------------------INHERITED METHODS----------------------------------
+    std::string toString() const override;
     //!--------------------------------DESTRUCTORS--------------------------
-    virtual ~User() = default;
+    virtual ~User() noexcept = default;
 
 };

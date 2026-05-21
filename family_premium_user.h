@@ -29,8 +29,9 @@ public:
     void printMembers() const; 
     //!----------------------- OTHER METHODS ---------------------
     void displayProfile() const override;
+    std::string toString() const override;
     bool addMember(const std::string& new_member);
     bool removeMember(const std::string& removed_member);
     //!----------------------- DESTRUCTOR ---------------------
-    ~FamilyPremiumUser();
+    ~FamilyPremiumUser() noexcept;
 };
