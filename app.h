@@ -7,6 +7,8 @@
 #include <vector>
 #include <fstream>
 
+#include "templates.h"
+
 
 
 class Artist;
@@ -23,8 +25,8 @@ class StreamingPlatformApp {
     std::unordered_map<std::string, User*> users_database;
     User* current_user;
     std::list<playableItem*> music_queue;
+    PlaybackHistory<playableItem*, 25> recent_history;
     static const int MAX_QUEUE_SIZE;
-    // std::ofstream f;
 
     StreamingPlatformApp();
     
@@ -65,6 +67,7 @@ private:
     void AccountSettings();
     void ManageSubscriptions();
     void ManageLikedSongs();
+    void ShowPlaybackHistory();
     void DisplayLogs();
 
     bool duplicate_name_ignoreCase(const std::string& name1, const std::string& name2);

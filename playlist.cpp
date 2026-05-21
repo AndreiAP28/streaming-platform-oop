@@ -134,21 +134,36 @@ void Playlist::removeSong(int removed_songID) {
     if (this->songs.empty()) {
         throw InvalidActionException("Playlist is already empty!");
     }
-    
-    size_t before_removing_size = this->songs.size();
-    this->songs.erase(
-        remove_if(songs.begin(), songs.end(),
+
+    auto deleting_iterator = remove_if(songs.begin(), songs.end(),
             [removed_songID](const Song* curr_song){
                 return curr_song->getID() == removed_songID;
             }
-        ),
-        songs.end()
     );
-    if (this->songs.size() < before_removing_size) {
-        cout << "[SUCCESS] Song removed from playlist!\n";
-    } else {
+
+    if (deleting_iterator == songs.end()){
         throw ObjectNotFoundException("Song ID", to_string(removed_songID));
     }
+
+    this->songs.erase(deleting_iterator, songs.end());
+    cout << "[SUCCESS] Song removed from playlist!\n";
+
+    
+    // size_t before_removing_size = this->songs.size();
+    // this->songs.erase(
+    //     remove_if(songs.begin(), songs.end(),
+    //         [removed_songID](const Song* curr_song){
+    //             return curr_song->getID() == removed_songID;
+    //         }
+    //     ),
+    //     songs.end()
+    // );
+    // if (this->songs.size() < before_removing_size) {
+    //     cout << "[SUCCESS] Song removed from playlist!\n";
+    // } else {
+    //     throw ObjectNotFoundException("Song ID", to_string(removed_songID));
+        
+    // }
 }
 
 void Playlist::setName(const string& new_name) {

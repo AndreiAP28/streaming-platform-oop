@@ -17,6 +17,7 @@
 #include "exceptions.h"
 
 
+
 int IObject::counter = 0;
 
 using namespace std;
@@ -143,6 +144,7 @@ void StreamingPlatformApp::AddNewSonginDB() {
     Song* new_song = new Song();
     new_song->setTitle(input_songTitle);
     new_song->setArtistID(artistID);
+    new_song->setArtistName(found_artist->getName());
     cin >> *new_song;
 
     songs_database[new_song->getSongID()] = new_song;
@@ -437,6 +439,15 @@ void StreamingPlatformApp::ViewPlaylists() {
                     switch(user_choice) {
                         case 1: 
                             chosen_playlist->simulatePlayItem();
+                            try {
+                                this->recent_history.add(chosen_playlist);
+                            } catch (const overflow_error& e) {
+                                this->recent_history.clear();
+                                this->recent_history.add(chosen_playlist);
+                                
+                                cout << "\n" << e.what() << "\n";
+                                cout << "Istoricul a fost resetat automat.\n";
+                            }
                             looping = false;
                             break;
                         case 2:
@@ -468,11 +479,7 @@ void StreamingPlatformApp::ViewArtistsDB() {
     }
 
     cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED ARTISTS ~~~~~~~~~~~~~~~~~~~\n";
-    vector<Artist*> sorted_artists;
-    for (const auto& pair: artists_database) {
-        sorted_artists.push_back(pair.second);
-    }
-    
+    vector<Artist*> sorted_artists = extractMapValues(artists_database);
     sort(sorted_artists.begin(), sorted_artists.end(),
         [](Artist* first, Artist* second) {
             return first->getArtistID() < second->getArtistID();
@@ -514,10 +521,7 @@ void StreamingPlatformApp::ViewSongsDB() {
     }
 
     cout << "\n~~~~~~~~~~~~~~~~~~~ REGISTERED SONGS ~~~~~~~~~~~~~~~~~~~\n";
-    vector<Song*> sorted_songs;
-    for (const auto& pair : songs_database) {
-        sorted_songs.push_back(pair.second);
-    }
+    vector<Song*> sorted_songs = extractMapValues(songs_database);
 
     sort(sorted_songs.begin(), sorted_songs.end(),
         [](Song* first, Song* second) {
@@ -575,6 +579,15 @@ void StreamingPlatformApp::ViewSongsDB() {
                     switch(user_choice) {
                         case 1: 
                             chosen_song->simulatePlayItem();
+                            try {
+                                this->recent_history.add(chosen_song);
+                            } catch (const overflow_error& e) {
+                                this->recent_history.clear();
+                                this->recent_history.add(chosen_song);
+
+                                cout << "\n" << e.what() << "\n";
+                                cout << "Istoricul a fost resetat automat.\n";
+                            }
                             looping = false;
                             break;
                         case 2:
@@ -618,8 +631,9 @@ void StreamingPlatformApp::AccountSettings() {
             cout << "|  [1]. View My Profile                          |\n";
             cout << "|  [2]. Manage Liked Songs                       |\n";
             cout << "|  [3]. Manage Subscriptions                     |\n";
-            cout << "|  [4]. Display Logs                             |\n";
-            cout << "|  [5]. Sign Out                                 |\n";
+            cout << "|  [4]. View Playback History                    |\n";
+            cout << "|  [5]. Display Logs                             |\n";
+            cout << "|  [6]. Sign Out                                 |\n";
             cout << "|  [0]. Go Back to Main Menu                     |\n";
             cout << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
             show_second_menu = false;
@@ -641,10 +655,14 @@ void StreamingPlatformApp::AccountSettings() {
                     show_second_menu = true;
                     break;
                 case 4:
-                    this->DisplayLogs();
+                    this->ShowPlaybackHistory();
                     show_second_menu = true;
                     break;
                 case 5:
+                    this->DisplayLogs();
+                    show_second_menu = true;
+                    break;
+                case 6:
                     cout << "\nLogging out... Goodbye, " << this->current_user->getUsername() << "!\n";
                     this->current_user = nullptr;
                     looping = false;
@@ -655,10 +673,12 @@ void StreamingPlatformApp::AccountSettings() {
     
                 default:
                     throw InvalidActionException("Invalid menu choice. Please select a valid number.");
+                    show_second_menu = true;
             }   
 
         } catch(const StreamingAppException& e) {
             cout << "\n" << e.what() << "\n";
+            // show_second_menu = true;
         }
     }
 }
@@ -806,6 +826,8 @@ void StreamingPlatformApp::ManageLikedSongs() {
 
 void StreamingPlatformApp::ManageSubscriptions() {
 
+
+
     FamilyPremiumUser* family_user = dynamic_cast<FamilyPremiumUser*>(this->current_user);
     PremiumUser* premium_user = dynamic_cast<PremiumUser*>(this->current_user);
     
@@ -934,6 +956,41 @@ void StreamingPlatformApp::ManageSubscriptions() {
     cout << "[SUCCES] Congratulations! Subscription Activated!\n";
 }
 
+void StreamingPlatformApp::ShowPlaybackHistory() {
+    try {
+        playableItem* last_played = recent_history.getLastPlayed();
+
+        cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+        cout << "\n|     YOUR PLAYBACK HISTORY               |";
+        cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    
+        vector<playableItem*> temp_played;
+        recent_history.migrateTo(back_inserter(temp_played));
+
+        for (playableItem* const& played_item: temp_played ) {
+            Song* song_ptr = dynamic_cast<Song*>(played_item);
+            Playlist* playlist_ptr = dynamic_cast<Playlist*>(played_item);
+            if (song_ptr != nullptr) {
+                printItem(song_ptr);
+            } else if (playlist_ptr != nullptr) {
+                printItem(playlist_ptr);
+            } else {
+                printItem(played_item);
+            }
+
+        }
+        cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+        cout << "Press ENTER to go back....";
+        string ENTER_DUMMY;
+        getline(cin, ENTER_DUMMY);
+
+    } catch (const underflow_error& e) {
+        cout << "\n" << e.what() << "\n";
+        cout << "[i] HINT: Start listening to music to fill the history!\n";
+    }
+    
+}
+
 void StreamingPlatformApp::DisplayLogs() {
     try {
         string filepath = "oop_project/logger.txt" ;
@@ -980,6 +1037,7 @@ void StreamingPlatformApp::playQueue() {
         cout << "\n ############## STARTING PLAYBACK QUEUE ############## \n";
         for (playableItem* item: this->music_queue) {
             item->simulatePlayItem();
+            this->recent_history.add(item);
         }
 
         this->music_queue.clear();
@@ -1171,8 +1229,6 @@ void StreamingPlatformApp::run() {
 }
 
 void StreamingPlatformApp::preloadedData() {
-    cout << "[i] Booting Database... Injecting Mock Data...\n";
-
     vector<Artist*> artists;
     artists.push_back(new Artist("Travis Scott", 60000000, {}, true));
     artists.push_back(new Artist("Lil Uzi Vert", 35000000, {}, true));
@@ -1216,7 +1272,7 @@ void StreamingPlatformApp::preloadedData() {
             int random_month = 1 + (rand() % 12);
             int random_day = 1 + (rand() % 28); // safety for feb
 
-            Song* new_song =  new Song(all_songs[a_idx][i], random_duration, current_artist_id, {}, random_streams, Date(random_day, random_month, random_year));
+            Song* new_song =  new Song(all_songs[a_idx][i], artists[a_idx]->getName(), random_duration, current_artist_id, {}, random_streams, Date(random_day, random_month, random_year));
             //? cout << *current_artist <<endl; DEBUGGING
             songs_database[new_song->getSongID()] = new_song;
             
@@ -1224,9 +1280,6 @@ void StreamingPlatformApp::preloadedData() {
             
         }
     }
-    
-    cout << "[SUCCESS] " << artists_database.size() << " Artists and " << songs_database.size() << " Songs successfully loaded into the matrix!\n";
-
 }
 
 StreamingPlatformApp& StreamingPlatformApp::getInstance() {

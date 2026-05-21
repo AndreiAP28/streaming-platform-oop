@@ -23,8 +23,8 @@ durationSec(0), artistID(0), streams(0), releaseDate() {
     StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Song added to the database.");
 }
 
-Song::Song(const string& title, int durationSec, int artistID, const vector<string>& artistsFeatures, long long streams, const Date& dateParam) 
-:title(title), durationSec(durationSec), artistID(artistID), streams(streams), releaseDate(dateParam) {
+Song::Song(const string& title, const string& artistName, int durationSec, int artistID, const vector<string>& artistsFeatures, long long streams, const Date& dateParam) 
+:title(title), artistName(artistName), durationSec(durationSec), artistID(artistID), streams(streams), releaseDate(dateParam) {
     // cout << "CONSTRUCTORUL SONG CU TOTI PARAM CREAT" << endl;
     // cout << "Song()" << endl;
     StreamingPlatformApp::getInstance().systemLog(to_string(this->getID()) + " ] New Song added to the database.");
@@ -208,6 +208,10 @@ void Song::setTitle(const string& new_title) {
    this->title = new_title;
 }
 
+void Song::setArtistName(const string& artist_name){
+    this->artistName = artist_name;
+}
+
 //!------------------ INHERITED FUNCTIONS FROM ABSTRACT CLAS PLAYABLEITEM
 void Song::simulatePlayItem() {
     cout << "\n [|>] Now Playing Audio Track: " << this->title << "...\n";
@@ -232,7 +236,7 @@ string Song::toString() const {
     os << "|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n";
     
     os << "| System ID: [" << this->getID() << "]  TITLE: " << this->title << "\n";
-    
+    os << "| BY: " << this->artistName <<"\n";
     if (!this->artistsFeatures.empty()) {
         os << "|  FEATURING: ";
         for (int i = 0; i < static_cast<int>(this->artistsFeatures.size()); i++) {

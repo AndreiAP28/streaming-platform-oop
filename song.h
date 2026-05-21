@@ -12,6 +12,7 @@ class Song: public playableItem {
     // static int counter;
     // const int SONG_ID;
     std::string title;
+    std::string artistName;
     int durationSec;
     int artistID;
     std::vector<std::string> artistsFeatures;
@@ -22,7 +23,7 @@ public:
 
     //!     CONSTRUCTORS
     Song();
-    Song(const std::string& title, int durationSec, int artistID, const std::vector<std::string>& artistFeatures, long long streams, const Date& dateParam);
+    Song(const std::string& title, const std::string& artistName, int durationSec, int artistID, const std::vector<std::string>& artistFeatures, long long streams, const Date& dateParam);
     Song(const std::string& title);
 
     //!     OVERWRITTING OPERATORS
@@ -56,12 +57,14 @@ public:
     const int getSongID() const { return this->getID(); }
     long long getStreams() const { return this->streams; }
     const std::vector<std::string>& getFeatures() const { return this->artistsFeatures; }
+    const std::string& getArtistName() const { return this->artistName; }
     int getFeaturesNum() const { return this->artistsFeatures.size(); }
     //!     SETTERS
 
     void addFeature(const std::string& featureName);
     void setArtistID(int id) { this->artistID = id;};
     void setTitle(const std::string& song_title);
+    void setArtistName(const std::string& artist_name);
 
     //! INHERITED FUNCTIONS FROM ABSTRACT CLASS -> PLAYABLEITEM
     void simulatePlayItem() override;
