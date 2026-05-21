@@ -5,7 +5,6 @@
 #include <string>
 
 
-//! RENUNT LA HEADER SI FAC UN CPP sau impart header si cpp desi functiile sunt mici?
 
 class StreamingAppException: public std::exception {
 protected:
